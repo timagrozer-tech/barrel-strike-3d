@@ -2,9 +2,9 @@
 """Полный регрессионный прогон VOID FRONTIER 2.0 в Chromium (Playwright) через реальный http-сервер.
 Запуск: python3 -m http.server 8081 -d www  &&  python3 tests/full.py
 Ускорение: тест подменяет таймеры/HP через JS, но использует реальные функции игры."""
-import json,sys
+import json,sys,os
 from playwright.sync_api import sync_playwright
-URL='http://localhost:8081/';OUT='/tmp/claude-0/s/'
+URL='http://localhost:8081/';OUT=os.environ.get('VF_OUT','/tmp/claude-0/s').rstrip('/')+'/';os.makedirs(OUT,exist_ok=True)
 results=[];errors=[]
 def ok(name,cond,info=''):
     results.append((name,bool(cond),info));print(('PASS ' if cond else 'FAIL ')+name+(' — '+str(info) if info else ''))

@@ -1,0 +1,11 @@
+{
+  "appId": "ru.voidfrontier.game",
+  "appName": "VOID FRONTIER",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#030716",
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": { "androidScheme": "https" }
+}

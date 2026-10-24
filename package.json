@@ -1,0 +1,20 @@
+{
+  "name": "void-frontier",
+  "version": "2.0.0",
+  "private": true,
+  "description": "VOID FRONTIER — вертикальный космический шутер (HTML5 Canvas). Android-сборка через Capacitor.",
+  "scripts": {
+    "serve": "python3 -m http.server 8081 -d www",
+    "check": "for f in www/js/*.js www/sw.js; do node --check $f || exit 1; done",
+    "sw": "python3 tools/gen_sw.py",
+    "cap:sync": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}
