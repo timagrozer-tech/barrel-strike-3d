@@ -1,8 +1,12 @@
 /* VOID FRONTIER — service worker (генерируется tools/gen_sw.py). Версия кеша меняется при любом изменении файлов. */
-const CACHE='void-frontier-v2.0-f4d5e250cb';
+const CACHE='void-frontier-v2.0-0afb015b41';
 const ASSETS=[
  './',
  './assets/architect.jpg',
+ './assets/sprites/arch_glow.png',
+ './assets/sprites/arch_hull.png',
+ './assets/sprites/arch_wing_l.png',
+ './assets/sprites/arch_wing_r.png',
  './assets/sprites/duckling.png',
  './assets/sprites/enemy_bomber.png',
  './assets/sprites/enemy_carrier.png',
@@ -20,6 +24,11 @@ const ASSETS=[
  './assets/sprites/player_lvl3.png',
  './assets/sprites/player_lvl4.png',
  './assets/sprites/player_lvl5.png',
+ './assets/sprites/ship_archon.png',
+ './assets/sprites/ship_bastion.png',
+ './assets/sprites/ship_hive.png',
+ './assets/sprites/ship_nova.png',
+ './assets/sprites/ship_valkyrie.png',
  './icon-192.png',
  './icon-512.png',
  './icon.svg',
@@ -30,6 +39,7 @@ const ASSETS=[
  './js/engine.js',
  './js/main.js',
  './js/market.js',
+ './js/meta.js',
  './js/office.js',
  './js/render.js',
  './js/save.js',

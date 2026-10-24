@@ -35,11 +35,12 @@ function finishCaseStage(){
  if(state!=='play'||mode!=='story')return;
  const i=currentCaseStage,op=caseCurrent(),flawless=story.caught===0,reward=op.reward+story.reports*40+(flawless?80:0);
  credits+=reward;runCredits+=reward;bestScore=Math.max(bestScore,score);caseCleared[i]=true;caseBest[i]=Math.max(caseBest[i]||0,score);caseUnlocked=Math.max(caseUnlocked,Math.min(3,i+1));
- persist();state='caseResult';sfx('win');document.body.classList.remove('in-combat');bombBtn.style.display='none';pauseBtn.style.display='none';hideBtn.style.display='none';freezeBtn.style.display='none';panel.style.display='block';
+ const xpGain=Math.floor(score/25)+kills+100,rankBefore=rankIndex();persist();checkAchievements();addXp(xpGain);lastRunSummary={xpGain,rankBefore};state='caseResult';sfx('win');document.body.classList.remove('in-combat');bombBtn.style.display='none';pauseBtn.style.display='none';hideBtn.style.display='none';freezeBtn.style.display='none';panel.style.display='block';
  const next=i<3?CASE_OPERATIONS[i+1]:null;
  panel.innerHTML=`<div class="dialog-scene result win"><span class="eyebrow">ГРУППА РОЗЫСКА СОЧ · ДЕЛО № 000</span><h1>СЛЕД ОБНАРУЖЕН</h1><p><b>${op.sector}</b> очищен. Получена улика: «${op.evidence}».${next?' Новые координаты ведут в '+next.sector+'.':''}</p>
  <div class="result-grid"><div><b>${score.toLocaleString('ru-RU')}</b><span>ОЧКИ</span></div><div><b>${story.reports}/3</b><span>УЛИКИ</span></div><div><b>${kills}</b><span>СБИТО</span></div><div><b>+${reward}</b><span>КРЕДИТЫ ₡</span></div></div>
  <div class="terminal"><span>ПОБЕЖДЁН ПОМОЩНИК: ${MINI.find(m=>m.kind===op.mini)?.name||'НЕИЗВЕСТНЫЙ'}</span><span>${storyEvents[op.mini]||''}</span>${flawless?'<span>БЕЗ ОБНАРУЖЕНИЙ: +80 ₡</span>':''}</div>
+ ${runSummaryHtml()}
  ${next?'<button id="nextCase">СЛЕДУЮЩАЯ ОПЕРАЦИЯ →</button>':''}<button id="upgradeShip" class="ghost">В АНГАР: УЛУЧШИТЬ КОРАБЛЬ</button><button id="backDossier" class="ghost">В ДОСЬЕ РОЗЫСКА</button></div>`;
  if(next)document.getElementById('nextCase').onclick=()=>startCaseStage(i+1);
  document.getElementById('upgradeShip').onclick=()=>menu('ship');
@@ -81,7 +82,7 @@ function showEndingChoice(){
  if(secret)document.getElementById('goHome').onclick=()=>completeEnding('escape');
 }
 function completeEnding(kind){
- if(!ENDING_IDS.includes(kind))return;if(!caseEndings.includes(kind))caseEndings.push(kind);persist();state='ended';
+ if(!ENDING_IDS.includes(kind))return;if(!caseEndings.includes(kind))caseEndings.push(kind);persist();checkAchievements();state='ended';
  const choices={chief:['ЦЕЛЬ ЗАДЕРЖАНА','Ты доставляешь Архитектора в часть и передаёшь собранные материалы по делу № 000. Дальнейшую проверку проводят другие сотрудники. Тебе достаётся ещё три папки отчётов.'],loop:['ТАЙНА ПРИКАЗА № 000','Ты изучаешь найденные записи и обнаруживаешь сбой в штабном алгоритме. Архитектора доставляют для разбирательства, а дело пересматривают.'],escape:['ОПЕРАЦИЯ «ТИХИЙ ВОЗВРАТ»','Ты сохраняешь доказательства, убеждаешь Архитектора вернуться без космического преследования и закрываешь дежурство к 18:00.']};
  const [title,desc]=choices[kind];
  panel.innerHTML=`<div class="dialog-scene result win"><span class="eyebrow">ОПЕРАЦИЯ «НУЛЕВОЙ» ЗАВЕРШЕНА</span><h1>${title}</h1><p>${desc}</p><p>Концовок открыто: ${caseEndings.length}/3. Это вымышленная фантастическая история.</p><button id="endingMenu">К ДОСЬЕ РОЗЫСКА</button><button id="endingReplay" class="ghost">ПОВТОРИТЬ ФИНАЛ</button></div>`;

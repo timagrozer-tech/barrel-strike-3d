@@ -1,6 +1,6 @@
 # Проверка: одни и те же глобальные let/const не объявлены в двух скриптах.
 import re,sys,glob,collections
-files=['engine','save','audio','art','combat','render','story','ui','office','market','main']
+files=['engine','save','audio','art','meta','combat','render','story','ui','office','market','main']
 seen=collections.defaultdict(list)
 for f in files:
     s=open(f'/home/claude/void-frontier/www/js/{f}.js',encoding='utf-8').read()

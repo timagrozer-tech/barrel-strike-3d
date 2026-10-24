@@ -5,7 +5,8 @@
 const SPRITE_FILES={
  player1:'player_lvl1',player2:'player_lvl2',player3:'player_lvl3',player4:'player_lvl4',player5:'player_lvl5',
  scout:'enemy_scout',zig:'enemy_zig',heavy:'enemy_heavy',sniper:'enemy_sniper',carrier:'enemy_carrier',bomber:'enemy_bomber',drone:'enemy_drone',
- duck:'mini_duck',flower:'mini_flower',slipper:'mini_slipper',mountain:'mini_mountain',duckling:'duckling'
+ duck:'mini_duck',flower:'mini_flower',slipper:'mini_slipper',mountain:'mini_mountain',duckling:'duckling',
+ archHull:'arch_hull',archWingL:'arch_wing_l',archWingR:'arch_wing_r',archGlow:'arch_glow'
 };
 const IMG={};let assetsLoaded=0,assetsTotal=0;
 function loadImage(src){const img=new Image();assetsTotal++;img.onload=()=>{assetsLoaded++;img.ok=true};img.onerror=()=>{assetsLoaded++;img.failed=true;console.warn('Не загружен ресурс',src)};img.decoding='async';img.src=src;return img}
@@ -232,6 +233,12 @@ function procArt(key){
   x.fillStyle='rgba(255,120,40,.10)';x.fillRect(0,0,180,206);x.restore();
  }
  procStore[key]=cv;return cv;
+}
+// Перекрашенная копия спрайта (для огней флагмана по фазам).
+function tintedSprite(key,size,color){
+ const id='tint|'+key+'|'+size+'|'+color;let e=CACHE.get(id);if(e)return e;const base=spriteCache(key,size);if(!base)return null;
+ const cv=makeCanvas(base.cv.width,base.cv.height),x=cv.getContext('2d');x.drawImage(base.cv,0,0);x.globalCompositeOperation='source-in';x.fillStyle=color;x.fillRect(0,0,cv.width,cv.height);
+ e={cv,w:base.w,h:base.h};CACHE.set(id,e);return e;
 }
 // Совместимость с прежними именами функций рендера 1.4.
 const playerSprites={},enemySprites={};
