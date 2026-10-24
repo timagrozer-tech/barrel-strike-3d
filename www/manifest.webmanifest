@@ -1,0 +1,30 @@
+{
+  "name": "VOID FRONTIER: Космический розыск",
+  "short_name": "VOID FRONTIER",
+  "description": "Вертикальный космический шутер: поиск вымышленного беглеца, улики, четыре операции, мини-боссы и штабные миссии.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020817",
+  "theme_color": "#091b30",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
