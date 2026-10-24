@@ -309,3 +309,4 @@ p{line-height:1.5}
 @media (max-width:370px){.dossier-grid{grid-template-columns:1fr 104px}.stat{grid-template-columns:20px 96px 1fr 40px}.result-grid{grid-template-columns:repeat(2,1fr)}.bottom-nav button{font-size:11px}.ship-card{grid-template-columns:84px 1fr}.sc-img img{width:76px;height:76px}}
 @media (max-height:700px){.hero{height:132px}.logo b{font-size:38px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body.in-combat #achToast{top:52%}

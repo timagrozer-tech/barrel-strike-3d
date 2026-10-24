@@ -29,7 +29,7 @@ const marketMission={
  freeze(){if(state!=='market'||!marketRun||marketRun.freezeCd>0)return;const r=marketRun;r.freeze=4;r.freezeCd=20;lmNotice('EXCEL ЗАВИС · ОХРАНА ЗАМЕРЛА');sfx('freeze');lmStatusButtons()},
  showShop(v){
   if(!marketRun)return;const r=marketRun;
-  state='marketShop';panel.style.display='block';panel.classList.add('office-dialog');r.shopCd=1.6;
+  state='marketShop';dlg();panel.classList.add('market-dialog');r.shopCd=1.6;
   const owned=!!contraband[v.id];
   panel.innerHTML=`<div class="dialog-scene market-dialog"><span class="eyebrow">НИЖНИЙ РЫНОК · ЛАВКА № ${LM_VENDORS.indexOf(v)+1}</span><h1>${v.name}</h1><p>«${v.line}»</p><div class="terminal"><span>ТОВАР: ${v.item}</span><span>ЭФФЕКТ: ${v.desc}</span><span>ЦЕНА: ${v.cost} ₡ · ТВОИ КРЕДИТЫ: ${credits} ₡</span><span>ПОДОЗРЕНИЕ РЫНКА: ${Math.round(r.heat)}%</span></div><button id="lmBuy" ${owned?'disabled':''}>${owned?'✓ УЖЕ КУПЛЕНО':'КУПИТЬ БЕЗ ДОКУМЕНТОВ · '+v.cost+' ₡'}</button><p class="hint" id="lmFeedback">${owned?'Улучшение уже действует на всех твоих кораблях.':'После сделки повышается риск облавы.'}</p><button id="lmBack" class="ghost">ОТОЙТИ ОТ ПРИЛАВКА</button></div>`;
   document.getElementById('lmBuy').onclick=()=>{
@@ -47,7 +47,7 @@ const marketMission={
   else{officeRun.alert=clamp(officeRun.alert+Math.round(r.heat*.2),0,95);hqAnnouncement('ПОКУПКИ В КОРАБЛЕ. ВОЗВРАЩАЙСЯ В ШТАБ',3)}
   persist();state='office';panel.style.display='none';panel.classList.remove('office-dialog');officeRun.hero.x=333;officeRun.hero.y=787;officeRun.target={x:333,y:787};hideBtn.style.display='flex';freezeBtn.style.display='flex';hqButtons();audio.scene='';sfx('door');last=performance.now();
  },
- pause(){if(state!=='market')return;state='marketPause';panel.style.display='block';panel.innerHTML='<div class="dialog-scene"><h1>ПАУЗА · НИЖНИЙ РЫНОК</h1><p>Подозрение и охрана заморожены, пока игра на паузе.</p><button id="lmResume">ПРОДОЛЖИТЬ</button><button id="lmLeave" class="ghost">ПОКИНУТЬ РЫНОК</button></div>';document.getElementById('lmResume').onclick=()=>{state='market';panel.style.display='none';last=performance.now()};document.getElementById('lmLeave').onclick=()=>marketMission.exit(marketRun.raid)},
+ pause(){if(state!=='market')return;state='marketPause';dlg();panel.innerHTML='<div class="dialog-scene"><h1>ПАУЗА · НИЖНИЙ РЫНОК</h1><p>Подозрение и охрана заморожены, пока игра на паузе.</p><button id="lmResume">ПРОДОЛЖИТЬ</button><button id="lmLeave" class="ghost">ПОКИНУТЬ РЫНОК</button></div>';document.getElementById('lmResume').onclick=()=>{state='market';panel.style.display='none';last=performance.now()};document.getElementById('lmLeave').onclick=()=>marketMission.exit(marketRun.raid)},
  update(dt){
   const r=marketRun;if(!r)return;r.elapsed+=dt;r.noticeTime=Math.max(0,r.noticeTime-dt);r.hide=Math.max(0,r.hide-dt);r.hideCd=Math.max(0,r.hideCd-dt);r.freeze=Math.max(0,r.freeze-dt);r.freezeCd=Math.max(0,r.freezeCd-dt);r.scannerCd=Math.max(0,r.scannerCd-dt);r.shopCd=Math.max(0,r.shopCd-dt);musicTick(dt);
   if(Math.floor((r.elapsed-dt)*3)!==Math.floor(r.elapsed*3))lmStatusButtons();

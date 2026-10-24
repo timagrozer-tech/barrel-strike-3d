@@ -1,7 +1,7 @@
 'use strict';
 /* Космический бой — основа игры. Режимы: 'story' (розыск СОЧ, 4 операции), 'endless' (Бездна), 'parade' (Парад Дебилов). */
 let state='splash',last=0,t=0,spawn=0,score=0,kills=0,phase=0,shake=0,inv=0,shots=[],foes=[],hostile=[],boss=null,player={x:270,y:820,hp:100,max:100,bombs:2},target={x:270,y:820},fire=0;
-let mini=null,miniIndex=0,miniCleared=false,storyMiniSpawned=false,paradeKills=0,announcement='',announceTimer=0,announceSub='',perkChoices=0,perkDamage=1,perkShield=0,perkSpeed=1,runSeed=0,graze=0,warning=null,hangarTab='ship',phaseSeen=1,combatStats={bossModules:0};
+let mini=null,miniIndex=0,miniCleared=false,storyMiniSpawned=false,paradeKills=0,announcement='',announceTimer=0,announceSub='',perkChoices=0,perkDamage=1,perkShield=0,perkSpeed=1,runSeed=0,graze=0,warning=null,hangarTab='home',phaseSeen=1,combatStats={bossModules:0};
 let mode='story',droneCd=0,missileCd=0,wave=1,spawned=0,eliteKills=0,waveClock=0;
 let decoys=[],warnBanner=0,achTick=0,hazards=[],pickups=[],overcharge=0,combo=0,comboTimer=0,deathTimer=0,runCredits=0,sideGunCd=0,paradeRest=0;
 const keys=new Set();
@@ -110,7 +110,7 @@ function reset(){
  decoys=[];hazards=[];pickups=[];overcharge=0;combo=0;comboTimer=0;deathTimer=0;runCredits=0;sideGunCd=0;paradeRest=0;
  const mx=shipMaxHp();player={x:270,y:H-150,hp:mx,max:mx,bombs:mods.noBombs?0:2+(SHIPS[ship].bombs||0),bank:0,dead:false,shieldCd:0,bubble:0,magnet:0,revived:false};target={x:270,y:H-150};fire=0;wave=1;waveClock=0;spawned=0;droneCd=0;missileCd=0;
  setBackgroundTheme(mode==='story'?(currentCaseStage===4?6:currentCaseStage):mode==='endless'?4:5);initStars();
- panel.classList.remove('hangar','office-dialog');panel.style.display='none';document.body.classList.add('in-combat');
+ panel.className='';panel.style.display='none';document.body.classList.add('in-combat');
  bombBtn.style.display='flex';pauseBtn.style.display='flex';hideBtn.style.display=mode==='story'?'flex':'none';freezeBtn.style.display=mode==='story'?'flex':'none';updateBombButton();
  last=performance.now();
 }
@@ -420,16 +420,16 @@ function end(win){
  if(mode==='endless')abyssBestWave=Math.max(abyssBestWave,wave);
  const xpGain=Math.floor(score/25)+kills+(win?150:0),rankBefore=rankIndex();persist();checkAchievements();addXp(xpGain);lastRunSummary={xpGain,rankBefore};
  if(win&&mode==='story'){if(caseCurrent().boss==='phantom')showPhantomCaught();else showEndingChoice();return}
- state=win?'win':'lose';panel.style.display='block';panel.classList.remove('hangar');
+ state=win?'win':'lose';dlg();
  const title=win?(mode==='parade'?'ПАРАД ОКОНЧЕН':'ПОБЕДА'):'КОРАБЛЬ УНИЧТОЖЕН';
  const sub=win?(mode==='parade'?'Все восемь аномалий повержены.':'Архитектор Бездны отступил.'):mode==='story'?'Розыскная операция прервана. Координаты цели сохранены.':'Конклав захватил сектор.';
  panel.innerHTML=`<div class="dialog-scene result ${win?'win':'lose'}"><span class="eyebrow">${mode==='story'?'РОЗЫСК СОЧ · '+caseCurrent().sector:mode==='endless'?'РЕЖИМ БЕЗДНА':'ПАРАД ДЕБИЛОВ'}</span><h1>${title}</h1><p>${sub}</p>
  <div class="result-grid"><div><b>${score.toLocaleString('ru-RU')}</b><span>ОЧКИ</span></div><div><b>${kills}</b><span>СБИТО</span></div><div><b>${graze}</b><span>GRAZE</span></div><div><b>${mode==='endless'?wave:mode==='parade'?paradeKills+'/'+MINI.length:combatStats.bossModules}</b><span>${mode==='endless'?'ВОЛНА':mode==='parade'?'АНОМАЛИИ':'ТУРЕЛИ'}</span></div></div>
  <div class="terminal"><span>НАГРАДА ЗА БОЙ: +${reward} ₡${runCredits>reward?' · ВСЕГО ЗА ВЫЛЕТ +'+runCredits+' ₡':''}</span><span>РЕКОРД: ${bestScore.toLocaleString('ru-RU')}${mode==='endless'?' · ЛУЧШАЯ ВОЛНА '+abyssBestWave:''}</span>${challengeActive?`<span>ИСПЫТАНИЕ «${challengeActive.name}»: ${challengeDoneToday()?'ПРОЙДЕНО ✓':'цель — волна '+CHALLENGE_GOAL}</span>`:''}</div>
  ${runSummaryHtml()}
- <button id="again">${mode==='story'?'ПОВТОРИТЬ ОПЕРАЦИЮ':'ИГРАТЬ СНОВА'}</button><button id="toHangar" class="ghost">В АНГАР</button><p class="hint">Награды сохранены в ангаре.</p></div>`;
+ <button id="again">${mode==='story'?'ПОВТОРИТЬ ОПЕРАЦИЮ':'ИГРАТЬ СНОВА'}</button><button id="toHangar" class="ghost">В ШТАБ</button><p class="hint">Награды сохранены в ангаре.</p></div>`;
  document.querySelector('#again').onclick=()=>mode==='story'?startCaseStage(currentCaseStage):reset();
- document.querySelector('#toHangar').onclick=()=>menu('ship');
+ document.querySelector('#toHangar').onclick=()=>menu('home');
 }
 let lastRunSummary=null;
 // Блок итогов: опыт, звание, достижения за вылет.
@@ -439,7 +439,7 @@ function runSummaryHtml(){
  ${runAchievements.length?`<div class="ach-mini">${runAchievements.map(id=>{const a=ACH.find(x=>x.id===id);return `<span>${a.ic} ${a.name} · +${a.reward} ₡</span>`}).join('')}</div>`:''}</div>`;
 }
 function offerPerks(){
- if(state!=='play')return;state='perk';perkChoices++;panel.style.display='block';panel.classList.remove('hangar');
+ if(state!=='play')return;state='perk';perkChoices++;dlg();
  panel.innerHTML=`<div class="dialog-scene"><span class="eyebrow">БЕЗДНА · ВОЛНА ${wave}</span><h1>УСИЛЕНИЕ ЗАБЕГА</h1><p>Выбери один модуль. Он действует до конца вылета.</p><div class="perk-grid"><button id="perk1"><i>⚡</i><b>ПЕРЕГРУЗКА</b><small>+20% урона</small></button><button id="perk2"><i>🛡</i><b>ЩИТ</b><small>Восстановить 35 HP</small></button><button id="perk3"><i>🚀</i><b>УСКОРИТЕЛЬ</b><small>+15% манёвренности</small></button></div></div>`;
  document.querySelector('#perk1').onclick=()=>{perkDamage*=1.2;resumePerk()};
  document.querySelector('#perk2').onclick=()=>{player.hp=Math.min(player.max,player.hp+35);perkShield++;resumePerk()};

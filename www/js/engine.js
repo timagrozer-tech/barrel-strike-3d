@@ -3,7 +3,7 @@
  * Логическая ширина всегда 540. Логическая высота H растёт на вытянутых экранах (20:9) до 1200,
  * чтобы картинка не растягивалась и бой занимал весь экран. Штаб и рынок рисуются в 540×960
  * со смещением OFFY по вертикали. */
-const VF_VERSION='2.2';
+const VF_VERSION='3.0';
 const c=document.querySelector('#game'),g=c.getContext('2d',{alpha:false});
 const W=540;let H=960,OFFY=0,pixelScale=1,cssScale=1;
 const TAU=Math.PI*2;

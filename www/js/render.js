@@ -165,31 +165,56 @@ function renderHazards(firing){
 }
 /* ---------- HUD ---------- */
 function hudBar(x,y,w,h,k,col,bg='#16304a'){g.fillStyle=bg;g.beginPath();g.roundRect(x,y,w,h,h/2);g.fill();if(k>0){g.fillStyle=col;g.beginPath();g.roundRect(x,y,Math.max(h,w*clamp(k,0,1)),h,h/2);g.fill()}g.fillStyle='rgba(255,255,255,.18)';g.fillRect(x+h/2,y+1,Math.max(0,w*clamp(k,0,1)-h),h*.35)}
+const FH='Oswald,"Arial Narrow",system-ui,sans-serif',FB='"Exo 2",system-ui,sans-serif';
+function hudPanel(x,y,w,h,cut=10){g.beginPath();g.moveTo(x+cut,y);g.lineTo(x+w,y);g.lineTo(x+w,y+h-cut);g.lineTo(x+w-cut,y+h);g.lineTo(x,y+h);g.lineTo(x,y+cut);g.closePath()}
+function segBar(x,y,w,h,k,col,n=20){const gap=2,sw=(w-gap*(n-1))/n,on=Math.round(clamp(k,0,1)*n);for(let i=0;i<n;i++){g.fillStyle=i<on?col:'rgba(40,64,90,.55)';g.beginPath();g.moveTo(x+i*(sw+gap)+3,y);g.lineTo(x+i*(sw+gap)+sw+3,y);g.lineTo(x+i*(sw+gap)+sw,y+h);g.lineTo(x+i*(sw+gap),y+h);g.closePath();g.fill()}}
+function fitText(txt,maxW){if(g.measureText(txt).width<=maxW)return txt;let s=txt;while(s.length>3&&g.measureText(s+'…').width>maxW)s=s.slice(0,-1);return s+'…'}
 function renderHUD(){
  if(!['play','pause','perk','dialog'].includes(state))return;
- const gr=g.createLinearGradient(0,0,0,140);gr.addColorStop(0,'rgba(2,7,18,.94)');gr.addColorStop(.7,'rgba(2,7,18,.6)');gr.addColorStop(1,'rgba(2,7,18,0)');g.fillStyle=gr;g.fillRect(0,0,W,140);
- const sx=W-((pauseBtn.offsetWidth||44)+22)/cssScale;
- g.textAlign='left';g.fillStyle='#7eefff';g.font='800 16px system-ui';
- g.fillText(mode==='story'?'ОПЕРАЦИЯ '+(currentCaseStage+1)+'/'+CASE_OPERATIONS.length+' · '+caseCurrent().sector:challengeActive?'ИСПЫТАНИЕ · '+challengeActive.name.toUpperCase():mode==='endless'?'БЕЗДНА ∞':'ПАРАД ДЕБИЛОВ',16,26);
- g.textAlign='right';g.fillStyle='#ffffff';g.font='900 28px system-ui';g.fillText(score.toLocaleString('ru-RU'),sx,32);
- if(combo>=8){g.fillStyle='#ffd27a';g.font='900 15px system-ui';g.fillText('КОМБО ×'+(1+Math.min(2,Math.floor(combo/8)*.25)).toFixed(2),sx,54)}
- const hpK=player.hp/player.max;hudBar(16,38,280,20,hpK,hpK>.5?'#36e5bc':hpK>.25?'#ffd36c':'#ff5270');
- g.textAlign='left';g.fillStyle='#04121e';g.font='900 13px system-ui';g.fillText('КОРПУС '+Math.max(0,Math.ceil(hpK*100))+'%',26,53);
- g.fillStyle='#cfeaf7';g.font='800 15px system-ui';
- const status=boss?(boss.kind==='phantom'?'«НЕВИДИМКА» · ФАЗА ':'ФЛАГМАН · ФАЗА ')+boss.phase+(boss.kind==='phantom'&&boss.cloak>0?' · МАСКИРОВКА':''):mini?'АНОМАЛИЯ'+(mini.phase2?' · ФАЗА 2':''):mode==='parade'?`ПАРАД ${paradeKills}/${MINI.length}`:mode==='endless'?`ВОЛНА ${wave}`+(challengeActive?'/'+CHALLENGE_GOAL:''):`СЕКТОР · ${Math.ceil(t)}с`;
- let extra='';if(overcharge>0)extra+=' · ⚡'+Math.ceil(overcharge);if(player.bubble>0)extra+=' · ◈'+Math.ceil(player.bubble);if(player.magnet>0)extra+=' · U'+Math.ceil(player.magnet);
- g.fillText(status+' · GRAZE '+graze+extra,16,80);
- if(mode==='story'){hudBar(16,90,200,12,story.suspicion/100,story.suspicion<40?'#35eab5':story.suspicion<70?'#ffd36c':'#ff4b60');g.fillStyle='#d8ecff';g.font='800 13px system-ui';g.fillText('ВНИМАНИЕ '+Math.floor(story.suspicion)+'%',226,101);
-  for(let i=0;i<story.need;i++){const x0=372+i*24;g.fillStyle=i<story.reports?'#ffe48b':'rgba(255,228,139,.22)';g.beginPath();g.moveTo(x0,88);g.lineTo(x0+9,97);g.lineTo(x0,106);g.lineTo(x0-9,97);g.closePath();g.fill()}
-  if(story.hide>0||story.freeze>0){g.fillStyle='#7ff9e4';g.font='900 14px system-ui';g.fillText(story.hide>0?'ALT+TAB: НЕВИДИМОСТЬ':'EXCEL: ЗАМЕДЛЕНИЕ',16,126)}
-  if(story.suspicion>=70){g.fillStyle='rgba(120,12,34,'+(.06+.05*Math.sin(t*12))+')';g.fillRect(0,0,W,H);g.textAlign='center';g.fillStyle='#ff6b83';g.font='900 19px system-ui';g.fillText('ЦЕЛЬ ВЫСЛАЛА ПЕРЕХВАТЧИКИ!',W/2,160)}}
- const bb=boss||mini;if(bb&&bb.y>-80){const y=mode==='story'?140:116,col=boss?'#ff4d6e':mini.color;g.textAlign='center';g.fillStyle='#fff';g.font='900 16px system-ui';g.fillText(boss?BOSS_INFO[boss.kind].name:mini.name,W/2,y);hudBar(30,y+7,W-60,11,bb.hp/bb.max,col,'#2a1220');
-  g.fillStyle='rgba(255,255,255,.6)';for(const k of (boss?(boss.kind==='phantom'?[.33,.66]:[.25,.5,.75]):[.5]))g.fillRect(30+(W-60)*k-1,y+6,2,13)}
- if(warnBanner>0){const k=Math.min(1,warnBanner*2,(3-warnBanner)*4),y=H*.24;g.save();g.globalAlpha=k;g.fillStyle='rgba(60,0,10,.75)';g.fillRect(0,y-30,W,60);g.beginPath();g.rect(0,y-30,W,60);g.clip();g.fillStyle='rgba(255,40,70,.85)';const off=(t*120)%60;for(let x=-60;x<W+60;x+=60){g.beginPath();g.moveTo(x+off,y-30);g.lineTo(x+off+24,y-30);g.lineTo(x+off-6,y+30);g.lineTo(x+off-30,y+30);g.closePath();g.fill()}
-  g.fillStyle='rgba(10,0,4,.82)';g.fillRect(70,y-22,W-140,44);g.fillStyle=Math.floor(t*6)%2?'#ffffff':'#ff5a78';g.font='900 26px system-ui';g.textAlign='center';g.fillText('⚠ ВНИМАНИЕ ⚠',W/2,y+9);g.restore()}
- if(announceTimer>0){const k=Math.min(1,announceTimer*3,(announceMax-announceTimer)*6+.2),y=H*.36;g.globalAlpha=k;const bg=g.createLinearGradient(0,0,W,0);bg.addColorStop(0,'rgba(4,8,25,0)');bg.addColorStop(.15,'rgba(4,8,25,.88)');bg.addColorStop(.85,'rgba(4,8,25,.88)');bg.addColorStop(1,'rgba(4,8,25,0)');g.fillStyle=bg;g.fillRect(0,y-38,W,announceSub||mode==='story'?80:58);
-  g.fillStyle='#ffdc84';g.textAlign='center';g.font='900 22px system-ui';g.fillText(announcement.slice(0,36),W/2,y);g.font='800 14px system-ui';g.fillStyle='#a9d8ff';g.fillText((announceSub||(mode==='story'?caseCurrent().sector:'')).slice(0,48),W/2,y+27);g.globalAlpha=1}
- if(!player.dead&&player.hp/player.max<.3){const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.7);v.addColorStop(0,'rgba(255,0,40,0)');v.addColorStop(1,`rgba(255,0,40,${.18+.1*Math.sin(t*6)})`);g.fillStyle=v;g.fillRect(0,0,W,H)}
+ const story_=mode==='story',panelH=story_?136:106,sx=W-((pauseBtn.offsetWidth||46)+20)/cssScale;
+ // Стальная панель.
+ const bg=g.createLinearGradient(0,0,0,panelH);bg.addColorStop(0,'rgba(10,20,32,.95)');bg.addColorStop(1,'rgba(8,16,26,.86)');g.fillStyle=bg;hudPanel(0,0,W,panelH,14);g.fill();
+ g.strokeStyle='rgba(60,84,103,.9)';g.lineWidth=1.2;g.beginPath();g.moveTo(0,panelH);g.lineTo(W-14,panelH);g.lineTo(W,panelH-14);g.stroke();
+ g.fillStyle='rgba(105,203,235,.9)';g.fillRect(12,10,3,22);
+ // Название операции и прогресс.
+ const title=story_?'ОПЕРАЦИЯ '+String(currentCaseStage+1).padStart(2,'0')+' · '+caseCurrent().title:challengeActive?'ИСПЫТАНИЕ · '+challengeActive.name.toUpperCase():mode==='endless'?'РЕЖИМ «БЕЗДНА»':'ПАРАД ДЕБИЛОВ';
+ g.textAlign='left';g.fillStyle='#EDF4F7';g.font=`600 21px ${FH}`;g.fillText(fitText(title,sx-110),22,29);
+ const prog=story_?story.reports/story.need:mode==='endless'?(waveClock%12)/12:paradeKills/MINI.length;
+ segBar(22,38,250,7,prog,story_?'#E9BF68':'#F1545C',24);
+ const time=Math.floor(t),tm=Math.floor(time/60)+':'+String(time%60).padStart(2,'0');
+ const status=boss?(BOSS_INFO[boss.kind].name)+' · ФАЗА '+boss.phase:mini?'АНОМАЛИЯ'+(mini.phase2?' · ФАЗА 2':''):story_?'СЕКТОР '+(currentCaseStage+1)+'/'+CASE_OPERATIONS.length+' · УЛИКИ '+story.reports+'/'+story.need:mode==='endless'?'ВОЛНА '+wave+(challengeActive?' / '+CHALLENGE_GOAL:''):'АНОМАЛИЯ '+(paradeKills+1)+'/'+MINI.length;
+ g.fillStyle='#69CBEB';g.font=`500 17px ${FH}`;g.fillText(fitText(status+' · '+tm,sx-130),22,67);
+ // Очки и множитель.
+ g.textAlign='right';g.fillStyle='#A9C0CF';g.font=`500 14px ${FH}`;g.fillText('ОЧКИ',sx,19);
+ g.fillStyle='#EDF4F7';g.font=`700 32px ${FH}`;g.fillText(score.toLocaleString('ru-RU'),sx,52);
+ if(combo>=8){g.fillStyle='#F1545C';g.font=`700 18px ${FH}`;g.fillText('×'+(1+Math.min(2,Math.floor(combo/8)*.25)).toFixed(2),sx,74)}
+ // Корпус.
+ const hpK=player.hp/player.max,hpCol=hpK>.5?'#4FD3A6':hpK>.25?'#E9BF68':'#F1545C';
+ g.textAlign='left';g.fillStyle='#A9C0CF';g.font=`500 15px ${FH}`;g.fillText('КОРПУС',22,97);
+ segBar(90,85,190,14,hpK,hpCol,18);
+ g.fillStyle=hpCol;g.font=`600 16px ${FH}`;g.fillText(Math.max(0,Math.ceil(hpK*100))+'%',288,98);
+ let extra='GRAZE '+graze;if(overcharge>0)extra+=' · ⚡'+Math.ceil(overcharge);if(player.bubble>0)extra+=' · ЩИТ '+Math.ceil(player.bubble);if(player.magnet>0)extra+=' · МАГНИТ '+Math.ceil(player.magnet);
+ g.fillStyle='#A9C0CF';g.font=`500 15px ${FH}`;g.fillText(fitText(extra,W-352),340,98);
+ // Розыск: внимание цели и улики.
+ if(story_){g.fillStyle='#A9C0CF';g.font=`500 15px ${FH}`;g.fillText('ВНИМАНИЕ',22,125);
+  const sc=story.suspicion<40?'#4FD3A6':story.suspicion<70?'#E9BF68':'#F1545C';segBar(104,113,150,13,story.suspicion/100,sc,15);g.fillStyle=sc;g.font=`600 16px ${FH}`;g.fillText(Math.floor(story.suspicion)+'%',262,126);
+  for(let i=0;i<story.need;i++){const x0=330+i*26;g.fillStyle=i<story.reports?'#E9BF68':'rgba(233,191,104,.18)';g.beginPath();g.moveTo(x0,110);g.lineTo(x0+9,119);g.lineTo(x0,128);g.lineTo(x0-9,119);g.closePath();g.fill()}
+  if(story.hide>0||story.freeze>0){g.textAlign='center';g.fillStyle='#69CBEB';g.font=`600 17px ${FH}`;g.fillText(story.hide>0?'ALT+TAB: КОРАБЛЬ СКРЫТ':'EXCEL ЗАВИС: ВРАГИ ЗАМЕДЛЕНЫ',W/2,H-30);g.textAlign='left'}
+  if(story.suspicion>=70){g.fillStyle='rgba(120,12,34,'+(.06+.05*Math.sin(t*12))+')';g.fillRect(0,panelH,W,H-panelH);g.textAlign='center';g.fillStyle='#F1545C';g.font=`700 19px ${FH}`;g.fillText('ЦЕЛЬ ВЫСЛАЛА ПЕРЕХВАТЧИКИ!',W/2,panelH+44)}}
+ // Полоса босса.
+ const bb=boss||mini;if(bb&&bb.y>-80){const y=panelH+24,col=boss?(boss.kind==='phantom'?'#9dff5a':'#F1545C'):mini.color;
+  g.fillStyle='rgba(8,16,26,.82)';hudPanel(24,y-19,W-48,38,8);g.fill();g.strokeStyle='rgba(241,84,92,.55)';g.lineWidth=1;g.stroke();
+  g.textAlign='left';g.fillStyle='#EDF4F7';g.font=`600 17px ${FH}`;g.fillText(boss?BOSS_INFO[boss.kind].name:mini.name,34,y);
+  g.textAlign='right';g.fillStyle=col;g.fillText(Math.ceil(bb.hp/bb.max*100)+'%',W-34,y);
+  segBar(34,y+5,W-68,8,bb.hp/bb.max,col,30);
+  g.fillStyle='rgba(255,255,255,.7)';for(const k of (boss?(boss.kind==='phantom'?[.33,.66]:[.25,.5,.75]):[.5]))g.fillRect(34+(W-68)*k-1,y+3,2,11)}
+ // Баннер тревоги.
+ if(warnBanner>0){const k=Math.min(1,warnBanner*2,(3-warnBanner)*4),y=H*.26;g.save();g.globalAlpha=k;g.fillStyle='rgba(60,0,10,.75)';g.fillRect(0,y-30,W,60);g.beginPath();g.rect(0,y-30,W,60);g.clip();g.fillStyle='rgba(241,84,92,.85)';const off=(t*120)%60;for(let x=-60;x<W+60;x+=60){g.beginPath();g.moveTo(x+off,y-30);g.lineTo(x+off+24,y-30);g.lineTo(x+off-6,y+30);g.lineTo(x+off-30,y+30);g.closePath();g.fill()}
+  g.fillStyle='rgba(10,0,4,.86)';hudPanel(70,y-22,W-140,44,10);g.fill();g.fillStyle=Math.floor(t*6)%2?'#ffffff':'#F1545C';g.font=`700 26px ${FH}`;g.textAlign='center';g.fillText('⚠ ВНИМАНИЕ ⚠',W/2,y+10);g.restore()}
+ // Объявления.
+ if(announceTimer>0){const k=Math.min(1,announceTimer*3,(announceMax-announceTimer)*6+.2),y=H*.38;g.globalAlpha=k;g.fillStyle='rgba(8,16,26,.88)';hudPanel(30,y-38,W-60,announceSub||story_?84:58,12);g.fill();g.strokeStyle='rgba(233,191,104,.6)';g.lineWidth=1;g.stroke();
+  g.fillStyle='#E9BF68';g.textAlign='center';g.font=`700 26px ${FH}`;g.fillText(fitText(announcement,W-90),W/2,y);g.font=`500 17px ${FH}`;g.fillStyle='#A9C0CF';g.fillText(fitText(announceSub||(story_?caseCurrent().sector:''),W-90),W/2,y+26);g.globalAlpha=1}
+ if(!player.dead&&player.hp/player.max<.3){const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.7);v.addColorStop(0,'rgba(241,84,92,0)');v.addColorStop(1,`rgba(241,84,92,${.16+.1*Math.sin(t*6)})`);g.fillStyle=v;g.fillRect(0,0,W,H)}
 }
 
 

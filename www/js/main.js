@@ -39,26 +39,20 @@ function frame(now){
  }catch(err){console.error(err);}
  requestAnimationFrame(frame);
 }
-function refreshMainMenu(){
- const el=document.getElementById('menuStats');if(el)el.innerHTML=`<div><b>${caseCleared.filter(Boolean).length}/${CASE_OPERATIONS.length}</b><span>ДЕЛ ЗАКРЫТО</span></div><div><b>${fmt(credits)}</b><span>КРЕДИТЫ ₡</span></div><div><b>${hullLevel}/5</b><span>КОРПУС</span></div>`;
- const img=document.getElementById('menuShip');if(img)img.src='assets/sprites/player_lvl'+Math.max(3,hullLevel)+'.png';
- const cont=document.getElementById('continue');if(cont)cont.textContent=caseCleared.some(Boolean)||caseUnlocked>0?'ПРОДОЛЖИТЬ РОЗЫСК · ОПЕРАЦИЯ '+(Math.min(caseUnlocked,LAST_OP)+1):'НАЧАТЬ РОЗЫСК · ОПЕРАЦИЯ 1';
-}
 function boot(){
- loadSave();applyQuality();applyVolumes();applyButtonSize();setBackgroundTheme(0);initStars();refreshMainMenu();
- document.getElementById('start').onclick=()=>{initAudio();sfx('click');menu('ship')};
- document.getElementById('continue').onclick=()=>{initAudio();startCaseStage(Math.min(caseUnlocked,LAST_OP))};
- const ver=document.querySelector('.menu-version');if(ver)ver.textContent='ВЕРСИЯ '+VF_VERSION;
+ loadSave();applyQuality();applyVolumes();applyButtonSize();setBackgroundTheme(0);initStars();
+ // Шрифт для текста на canvas (HUD); игра работает и без него.
+ if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('600 20px Oswald'),document.fonts.load('600 14px "Exo 2"')]).catch(()=>{})}
+ menu('home');
  // Кнопка «Назад» Android в APK (Capacitor App plugin, если доступен).
  const App=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
  if(App&&App.addListener)App.addListener('backButton',()=>{
+  const cw=document.querySelector('.confirm-wrap');if(cw){cw.remove();return}
   if(state==='play'||state==='office'||state==='market')pauseGame();
   else if(state==='pause')resumeGame();
-  else if(state==='modes'||state==='briefing')menu();
-  else if(state==='menu'&&hangarTab!=='ship')menu('ship');
-  else if(state==='menu'){state='splash';panel.className='main-menu';location.reload()}
-  else if(state==='splash'&&App.exitApp)App.exitApp();
-  else if(['win','lose','caseResult','ended','officeFail','officeComplete','intro'].includes(state))menu('ship');
+  else if(state==='menu'&&hangarTab!=='home')menu('home');
+  else if(state==='menu'&&App.exitApp)App.exitApp();
+  else if(['briefing','intro','win','lose','caseResult','ended','officeFail','officeComplete'].includes(state))menu('home');
  });
  last=performance.now();requestAnimationFrame(frame);
 }

@@ -3,186 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#030716">
-<meta name="description" content="VOID FRONTIER — вертикальный космический шутер: розыск СОЧ, мини-боссы, флагман Архитектора, Бездна и Парад Дебилов.">
+<meta name="theme-color" content="#060E19">
+<meta name="description" content="VOID FRONTIER — вертикальный космический шутер: розыск СОЧ, мини-боссы, флагман Архитектора Бездны, Бездна и Парад Дебилов.">
 <title>VOID FRONTIER</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
+<link rel="preload" href="assets/fonts/oswald.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="css/ui.css">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<style>
-:root{--cl:0px;--ct:0px;--cw:100vw;--ch:100vh;--u:1;--cyan:#56f0ff;--cyan2:#00b8e8;--ink:#e7f8ff;--muted:#9fb9cc;--panel:#07152aee;--line:#22486a;--gold:#ffd27a;--pink:#ff4f8a;--btn-b:62px;--btn-a:56px;--btn-p:44px}
-:root[data-btn="s"]{--btn-b:52px;--btn-a:48px;--btn-p:40px}
-:root[data-btn="l"]{--btn-b:76px;--btn-a:68px;--btn-p:50px}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:#02060f;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
-body.in-combat{touch-action:none}
-#game{position:fixed;left:var(--cl);top:var(--ct);display:block;background:#020817;touch-action:none}
-#ui{position:fixed;inset:0;z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center;padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom))}
-#panel{pointer-events:auto;position:relative;max-width:min(94vw,460px);max-height:100%;overflow:auto;padding:22px;border-radius:20px;background:var(--panel);border:1px solid #2a6c8f;box-shadow:0 20px 60px #000a,0 0 60px #00bfff22;text-align:center;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
-#panel::-webkit-scrollbar{width:4px}#panel::-webkit-scrollbar-thumb{background:#2a5c7c;border-radius:4px}
-h1{font-size:24px;letter-spacing:2px;margin:6px 0 10px;color:#f2fcff}
-p{font-size:14px;line-height:1.55;color:#c7dce9}
-button{font:inherit;border:0;border-radius:12px;background:linear-gradient(120deg,#64ecff,#00b0e0);color:#00141f;font-weight:800;font-size:14px;letter-spacing:.3px;padding:12px 14px;margin:5px 0;cursor:pointer;min-height:44px;transition:transform .08s,filter .15s}
-button:active{transform:scale(.97)}button:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.6)}
-.ghost,#panel .ghost{background:#132b46;color:#d5f2ff;border:1px solid #386078}
-.eyebrow{color:#8feeff;font-size:11px;letter-spacing:2px;font-weight:800;text-transform:uppercase}
-.hint{font-size:11px;color:#9ab3c6;line-height:1.45;margin:8px 0}
-textarea{width:100%;background:#041021;color:#bff3ff;border:1px solid #2b5978;border-radius:10px;padding:9px;font:12px ui-monospace,monospace;resize:vertical;user-select:text;-webkit-user-select:text;touch-action:auto}
-
-/* ---- Стартовая заставка ---- */
-.main-menu{padding:0!important;max-width:min(94vw,440px)!important;border:1px solid rgba(88,223,255,.45)!important;background:radial-gradient(circle at 50% 0,rgba(48,144,194,.3),rgba(5,14,32,.94) 52%),linear-gradient(160deg,rgba(8,23,47,.95),rgba(3,9,22,.97))!important;overflow:hidden!important}
-.menu-shell{position:relative;padding:18px 18px 14px}
-.menu-topline{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.menu-tag{padding:6px 11px;border:1px solid rgba(109,226,255,.35);border-radius:999px;background:rgba(13,35,56,.78);font-size:10px;letter-spacing:1.6px;font-weight:800;color:#bdf7ff}.menu-tag b{color:#ffe08a}
-.menu-version{font-size:10px;color:#90adc2;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-.menu-title{margin:12px 0 2px;font-size:clamp(30px,9vw,40px);line-height:.95;letter-spacing:2px;color:#f3fbff;text-shadow:0 0 24px rgba(0,233,255,.3)}
-.menu-title span{display:block;font-size:12px;letter-spacing:5px;margin-top:8px;color:#76f2ff}
-.menu-ship{position:relative;height:clamp(120px,24dvh,190px);display:grid;place-items:center;margin:4px 0;overflow:hidden}
-.menu-ship:before{content:"";position:absolute;width:70%;height:30%;bottom:8%;border-radius:50%;border:1px solid rgba(90,210,255,.3);box-shadow:0 0 30px rgba(0,200,255,.18)}
-.menu-ship img{height:clamp(120px,24dvh,190px);max-width:70%;object-fit:contain;filter:drop-shadow(0 0 22px rgba(55,227,255,.5));animation:hover 3.2s ease-in-out infinite}
-@keyframes hover{50%{transform:translateY(-8px)}}
-.menu-subtitle{margin:0 0 10px;color:#b9d7ea;font-size:13px;line-height:1.5}
-.menu-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.menu-stats div{padding:9px 6px;border-radius:12px;background:rgba(11,28,46,.72);border:1px solid rgba(66,107,138,.45)}
-.menu-stats b{display:block;font-size:16px;color:#fff}.menu-stats span{font-size:9px;color:#9db8c8;letter-spacing:1px}
-.menu-actions{display:grid;gap:6px;margin-top:8px}.menu-actions button{margin:0;padding:14px;border-radius:14px;font-size:14px}
-.menu-primary{box-shadow:0 10px 25px rgba(0,195,255,.25)}
-.menu-footer{margin-top:10px;color:#7f9fb2;font-size:10px;line-height:1.5}
-@media(max-height:700px){.menu-subtitle{display:none}.menu-shell{padding:12px 14px}}
-
-/* ---- Ангар ---- */
-#panel.hangar{width:min(96vw,480px);height:min(calc(100dvh - 16px),920px);max-height:none;padding:0;display:flex;flex-direction:column;text-align:left;background:linear-gradient(160deg,#0b2240f2,#050f20f8);border-color:#29516f;overflow:hidden}
-.hangar-header{padding:12px 16px 8px;background:linear-gradient(115deg,#0a2646,#101d36);border-bottom:1px solid #22486a;flex-shrink:0}
-.hh-top{display:flex;justify-content:space-between;align-items:center}
-.icon-btn{width:40px;height:40px;min-height:40px;padding:0;margin:0;border-radius:12px;background:#132b46;color:#bfe7ff;border:1px solid #315878;font-size:18px}
-.icon-btn.chosen{background:#155a78;color:#fff;border-color:#2de3ef}
-.hangar-header h1{font-size:18px;letter-spacing:1.6px;margin:4px 0 8px}
-.currency{display:flex;gap:6px;flex-wrap:wrap}.currency span{background:#0a1b31;border:1px solid #23476a;border-radius:999px;padding:4px 10px;color:var(--gold);font-size:12px;font-weight:800}
-.hangar-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 10px;flex-shrink:0}
-.hangar-nav button{margin:0;padding:6px 2px;min-height:52px;background:#102740;color:#a9c6dc;border:1px solid #23435e;font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px}
-.hangar-nav button i{font-style:normal;font-size:17px}
-.hangar-nav button.chosen{background:linear-gradient(160deg,#16557a,#0f3550);color:#fff;border-color:#2de3ef;box-shadow:0 0 16px #2de3ef33}
-.hangar-content{flex:1;min-height:0;overflow-y:auto;padding:6px 14px 12px;touch-action:pan-y;overscroll-behavior:contain}
-.deploy{padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #22486a;flex-shrink:0;background:#06132588}
-.deploy-main{width:100%;margin:0;padding:15px;font-size:16px;letter-spacing:2px;border-radius:14px;box-shadow:0 8px 24px #00c8ff33}
-.toast{position:absolute;left:14px;right:14px;bottom:82px;margin:0;padding:10px 12px;border-radius:12px;background:#0d2c44;border:1px solid #2de3ef;font-size:12px;color:#dff;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;text-align:center}
-.toast.show{opacity:1;transform:none}.toast.bad{border-color:#ff5a7a;background:#3a1020}
-h2.sub,.codex h2,.story-codex h2{font-size:12px;letter-spacing:1.5px;color:#91edff;margin:14px 0 8px}
-.ship-stage{display:grid;grid-template-columns:minmax(120px,46%) 1fr;gap:10px;align-items:center}
-#shipPreview{width:100%;aspect-ratio:1;border-radius:16px;background:radial-gradient(circle,#103a5a,#06142a 70%);border:1px solid #23557a}
-.ship-meta small{display:block;color:#80ebff;font-size:10px;letter-spacing:1.4px;font-weight:800}.ship-meta strong{display:block;font-size:20px;margin:3px 0}
-.hull-name{display:inline-block;font-size:11px;color:var(--gold);font-weight:800;margin-bottom:4px}.ship-meta p{font-size:12px;margin:2px 0}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}.stat-grid span{padding:8px 10px;background:#112b46;border-radius:10px;font-size:11px;color:#b6ccdd;display:flex;justify-content:space-between;gap:6px}.stat-grid b{color:#f1fdff}
-.seg{display:flex;gap:5px;margin:6px 0}.seg button,.seg .filebtn{flex:1;margin:0;padding:9px 4px;min-height:42px;font-size:11px;background:#132b46;color:#bfe7ff;border:1px solid #315878;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:11px;font-weight:800;cursor:pointer;text-align:center}
-.seg button.chosen{background:#155a78;color:#fff;border-color:#2de3ef}.seg small{font-size:9px;color:var(--gold)}
-.lbl{font-size:10px;color:#9ab3c6;letter-spacing:1px;font-weight:800}
-.evo{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
-.evo-card{position:relative;margin:0;padding:6px 2px 4px;min-height:0;background:#0d2238;border:1px solid #23435e;border-radius:10px;color:#9fb9cc;display:flex;flex-direction:column;align-items:center;font-size:9px}
-.evo-card img{width:100%;aspect-ratio:1;object-fit:contain;filter:grayscale(1) brightness(.45)}
-.evo-card.owned img{filter:drop-shadow(0 0 6px #00d0ff88)}.evo-card.owned{color:#dff;border-color:#2b6c8c}
-.evo-card.viewing{border-color:var(--gold);box-shadow:0 0 12px #ffd27a55}.evo-card i{position:absolute;top:3px;right:4px;font-style:normal;font-size:10px}
-.modules{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0}.modules span{font-size:10px;padding:5px 8px;border-radius:999px;border:1px solid #26445e;color:#7f98ad}.modules span.on{color:#9efcd0;border-color:#37a98e;background:#0f2f2c}
-.upgrade-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:linear-gradient(120deg,#1b3352,#112640);border:1px solid #2f6488}
-.upgrade-card div{flex:1}.upgrade-card b{display:block;font-size:13px}.upgrade-card small{color:#9fc3d8;font-size:11px}.upgrade-card button{margin:0;padding:10px;font-size:12px;white-space:nowrap}
-.upgrade-card.done{justify-content:center;color:#9efcd0}
-.armory{display:grid;grid-template-columns:1fr 1fr;gap:8px}.armory>div{border:1px solid #284c66;background:#0f2640;border-radius:14px;padding:10px;display:flex;flex-direction:column}
-.armory strong{font-size:11px;color:#a5f0ff;letter-spacing:.5px}.armory p{font-size:11px;margin:6px 0;flex:1}.armory button{font-size:11px;margin:0;width:100%;padding:10px 4px}
-.pips{display:flex;gap:3px;margin-bottom:8px}.pips i{flex:1;height:6px;border-radius:3px;background:#1c3a55}.pips i.on{background:linear-gradient(90deg,#56f0ff,#00b8e8)}
-.story-codex p,.codex p{font-size:12px}
-.story-objective{background:#132e46;border-left:3px solid #56dcef;padding:8px 10px;margin:8px 0;border-radius:6px;font-size:12px}
-.case-grid{display:grid;gap:7px;margin-top:8px}
-.case-card{display:grid;gap:4px;text-align:left;width:100%;padding:12px;margin:0;background:linear-gradient(115deg,color-mix(in srgb,var(--tint) 40%,#10233f),#0f213b);border:1px solid #3b6988;color:#eaf9ff;line-height:1.3}
-.case-card .case-top{font-size:10px;color:#a9dcf3;letter-spacing:1px}.case-card strong{font-size:14px}.case-card small{font-size:10px;color:#a8d0e3}
-.case-card.complete{border-color:#3dc6a0}.case-card:disabled{background:#0c1f31;color:#66859c;border-color:#1f3b52}
-.wide{width:100%}
-.ending-chips{display:grid;gap:5px}.ending-chips span{display:block;border:1px solid #2c5167;border-radius:9px;padding:8px 10px;font-size:12px}.ending-chips .found{color:#9efcd0;border-color:#37a98e}.ending-chips .locked{color:#7d96a9}
-.codex-list{display:grid;gap:6px}.codex-row{display:flex;align-items:center;gap:10px;padding:6px;border-radius:10px;background:#0c2137;border:1px solid #1e3a54}
-.codex-row img{width:52px;height:44px;object-fit:contain;flex-shrink:0}.codex-row b{display:block;font-size:11px}.codex-row small{font-size:10px;color:#9fb9cc}
-.sliders label{font-size:11px;font-weight:800;display:block;margin:10px 0;color:#cfe7f5}.sliders output{float:right;color:#8feaff}.sliders input{display:block;width:100%;accent-color:#35dbec;margin-top:6px;height:26px}
-/* Выбор режима */
-.mode-list{display:grid;gap:8px;align-content:start;padding-top:12px}
-.mode-card{display:flex;align-items:center;gap:12px;text-align:left;margin:0;padding:14px;border-radius:16px;background:linear-gradient(120deg,#16304e,#0d1f37);border:1px solid #2f5d80;color:#eaf9ff}
-.mode-card i{font-style:normal;font-size:28px;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;background:#0a1a2e;flex-shrink:0}
-.mode-card b{display:block;font-size:14px}.mode-card small{display:block;font-size:11px;color:#9fc3d8;margin-top:3px;font-weight:600}
-.mode-card.primary{background:linear-gradient(120deg,#0f6d8f,#0a3a5c);border-color:#2de3ef;box-shadow:0 0 22px #00d0ff33}
-.mode-card.side{opacity:.9;border-style:dashed}
-/* Диалоги */
-.dialog-scene{max-width:400px;text-align:center}
-.dialog-scene h1{font-size:22px;margin:10px 0;color:#b6eeff;letter-spacing:1.2px}
-.dialog-scene .terminal{background:#030e19;border:1px solid #2c8c96;border-radius:10px;padding:12px;display:grid;gap:7px;text-align:left;font-size:12px;color:#b9eadc;margin:12px 0;font-family:ui-monospace,monospace}
-.dialog-scene .warn{color:#ff7c8a;font-weight:800}
-.dialog-scene>button{width:100%}
-.result.win h1{color:#9efcd0}.result.lose h1{color:#ff8a9a}
-.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}.result-grid div{background:#0c2137;border:1px solid #23476a;border-radius:10px;padding:8px 2px}.result-grid b{display:block;font-size:15px;color:#fff}.result-grid span{font-size:9px;color:#9db8c8;letter-spacing:.5px}
-.brief-sector{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--tint);color:#fff;font-weight:800;font-size:12px;letter-spacing:1px}
-.perk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.perk-grid button{display:flex;flex-direction:column;align-items:center;gap:4px;margin:0;padding:12px 4px;background:linear-gradient(160deg,#16466a,#0d2742);color:#eaffff;border:1px solid #2de3ef}
-.perk-grid i{font-style:normal;font-size:24px}.perk-grid b{font-size:11px}.perk-grid small{font-size:10px;color:#a9d8ee;font-weight:600}
-#panel.office-dialog{border-color:#75ddb5;background:#061e2bf0}
-#panel .office-stat{border:1px solid #2a5067;padding:10px;border-radius:10px;background:#0b2237;color:#b7efff;font-size:12px}
-
-/* ---- Боевые кнопки (привязаны к краям canvas) ---- */
-.cbtn{position:fixed;z-index:4;display:none;align-items:center;justify-content:center;flex-direction:column;margin:0;padding:0;pointer-events:auto;border-radius:50%;color:#fff;font-weight:900;touch-action:none}
-.cbtn i{font-style:normal;line-height:1}.cbtn span{font-size:9px;letter-spacing:.3px;line-height:1.1;margin-top:2px}
-#pause{top:calc(var(--ct) + max(10px,env(safe-area-inset-top)));right:calc(var(--cl) + 10px);width:var(--btn-p);height:var(--btn-p);min-height:0;background:#0d2238cc;border:1px solid #4c9fb9;font-size:15px;border-radius:12px}
-#bomb{right:calc(var(--cl) + 12px);bottom:calc(var(--ct) + 14px + env(safe-area-inset-bottom));width:var(--btn-b);height:var(--btn-b);background:radial-gradient(circle at 35% 30%,#7a3c5c,#3b1530);border:2px solid #ffcb4a;box-shadow:0 0 18px #ffb02a55}
-#bomb i{font-size:calc(var(--btn-b) * .36)}#bomb span{font-size:12px;color:#ffe08a}#bomb.empty{filter:grayscale(1);opacity:.5}
-#hide,#freeze{left:calc(var(--cl) + 12px);width:var(--btn-a);height:var(--btn-a);background:#0f2f45cc;border:1px solid #3fb5d6;color:#bff4ff;overflow:hidden}
-#hide{bottom:calc(var(--ct) + 14px + env(safe-area-inset-bottom))}
-#freeze{bottom:calc(var(--ct) + 24px + var(--btn-a) + env(safe-area-inset-bottom))}
-#hide i,#freeze i{font-size:calc(var(--btn-a) * .34)}
-#hide::after,#freeze::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,0,0,.6) var(--cd,0deg),transparent 0);pointer-events:none}
-#hide:disabled,#freeze:disabled{opacity:.85;filter:none}
-.hh-icons{display:flex;gap:6px}
-.rank-chip{flex:1;min-width:0;margin-right:10px}.rank-chip b{font-size:12px;color:var(--gold);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.xpbar{height:6px;border-radius:4px;background:#13304b;overflow:hidden;margin-top:4px}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#ffd27a,#ff9a3a);border-radius:4px}.xpbar.big{height:10px}
-.hangar-nav{grid-template-columns:repeat(5,1fr)}.hangar-nav button{position:relative;font-size:9px}.hangar-nav .dot{position:absolute;top:5px;right:8px;width:9px;height:9px;border-radius:50%;background:#ff4f6a;box-shadow:0 0 8px #ff4f6a}
-h2.sub small{font-weight:600;color:#7f98ad;letter-spacing:0;font-size:9px;margin-left:4px}
-.cls{display:inline-block;padding:3px 8px;border-radius:999px;border:1px solid var(--c);color:var(--c);font-size:9px;font-weight:900;letter-spacing:1px;background:#06132a}
-.ship-meta .cls{margin-bottom:4px}.ghost.small{padding:8px 10px;min-height:36px;font-size:11px;margin-top:6px}
-.filters button{min-height:36px}
-.shop-list{display:grid;gap:8px}
-.ship-card{display:grid;grid-template-columns:104px 1fr;gap:10px;padding:10px;border-radius:16px;background:linear-gradient(120deg,#122a46,#0b1a30);border:1px solid #24496a;position:relative}
-.ship-card.equipped{border-color:var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 35%,transparent)}
-.ship-card.cls-L{background:linear-gradient(120deg,#3a2c12,#1a1408 70%);border-color:#8a6a2a}
-.sc-img{position:relative;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle,color-mix(in srgb,var(--c) 30%,#06132a),#050d1c 70%)}
-.sc-img img{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--c) 60%,transparent))}.sc-img .cls{position:absolute;bottom:4px}
-.sc-body b{font-size:15px;display:block}.sc-body small{color:#9fc3d8;font-size:11px}.sc-body p{font-size:11px;margin:6px 0;line-height:1.4}
-.sbars{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center;margin-top:6px}.sbars span{font-size:9px;color:#8fb0c6;font-weight:800}.sbars div{height:6px;border-radius:3px;background:#173451;overflow:hidden}.sbars i{display:block;height:100%;background:var(--c)}
-.sc-body button{width:100%;margin:2px 0 0;padding:9px;font-size:12px}.sc-body button.cant{background:#2a3a4c;color:#c9d6e2}.sc-body button.eq{background:#123a2e;color:#9efcd0;opacity:1}
-.reward-box{padding:12px;border-radius:16px;background:linear-gradient(120deg,#132c48,#0b1b31);border:1px solid #24496a;margin:8px 0}.reward-box h2.sub{margin-top:0}
-.reward-box.challenge{border-color:#7a5bd0;background:linear-gradient(120deg,#26184a,#0f1530)}.reward-box p{font-size:12px;margin:6px 0}.reward-box button{width:100%;margin:6px 0 0}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.days span{display:flex;flex-direction:column;align-items:center;padding:6px 0;border-radius:9px;background:#0a1a2e;border:1px solid #1f3d58;font-size:9px;color:#8fb0c6}.days b{font-size:13px;color:#dff}
-.days .got{background:#123a2e;border-color:#37a98e;color:#9efcd0}.days .today{border-color:var(--gold);box-shadow:0 0 10px #ffd27a66;color:var(--gold)}
-.rank-line{display:flex;justify-content:space-between;align-items:center;font-size:13px}.rank-line span{color:#9fc3d8;font-size:12px}
-.ach-list{display:grid;gap:6px}.ach{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:12px;background:#0c2137;border:1px solid #1e3a54}
-.ach i{font-style:normal;font-size:22px;text-align:center;filter:grayscale(.8);opacity:.6}.ach.got i{filter:none;opacity:1}.ach b{font-size:12px;display:block}.ach small{font-size:10px;color:#8fb0c6;display:block}.ach em{font-style:normal;font-size:11px;color:var(--gold);font-weight:800}
-.ach.got{border-color:#37a98e;background:#0f2a2a}.ach.got em{color:#9efcd0}
-.mode-card.challenge{border-color:#7a5bd0;background:linear-gradient(120deg,#2a1a52,#121634)}
-.run-sum{margin:10px 0;padding:10px;border-radius:12px;background:#0b1d33;border:1px solid #2b5272;text-align:left}.ach-mini{display:grid;gap:4px;margin-top:8px}.ach-mini span{font-size:11px;color:#9efcd0}
-.codex-boss{border-radius:14px;background:radial-gradient(circle,#3a1020,#050d1c 70%);padding:6px;margin-bottom:6px}.codex-boss img{width:100%;display:block}.codex-boss.phantom{background:radial-gradient(circle,#1f3a14,#050d08 70%)}
-#achToast{position:fixed;left:50%;top:calc(var(--ct) + max(64px,env(safe-area-inset-top) + 54px));transform:translate(-50%,-20px);z-index:9;min-width:min(86vw,360px);padding:10px 14px;border-radius:14px;background:linear-gradient(120deg,#2a2210,#132233);border:1px solid #ffd27a;box-shadow:0 10px 30px #000a,0 0 24px #ffd27a44;opacity:0;pointer-events:none;transition:.3s;text-align:center}
-#achToast.show{opacity:1;transform:translate(-50%,0)}#achToast b{display:block;font-size:13px;color:#ffe9a8;letter-spacing:.5px}#achToast span{font-size:12px;color:#cfe6f5}
-@media(max-width:370px){#panel{padding:16px}.ship-card{grid-template-columns:84px 1fr}.sc-img img{width:78px;height:78px}.hangar-content{padding:6px 10px 10px}.armory{grid-template-columns:1fr}.result-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-height:690px){.hangar-nav button{min-height:44px;font-size:9px}.hangar-nav button i{font-size:14px}.hangar-header h1{font-size:15px;margin:2px 0 6px}}
-</style>
 </head>
 <body>
-<canvas id="game" width="540" height="960"></canvas>
-<div id="ui"><div id="panel" class="main-menu"><div class="menu-shell">
- <div class="menu-topline"><span class="menu-tag">ОПЕРАЦИЯ <b>СОЧ</b></span><span class="menu-version">ВЕРСИЯ 2.0</span></div>
- <h1 class="menu-title">VOID FRONTIER<span>SPACE PURSUIT ACTION</span></h1>
- <div class="menu-ship"><img id="menuShip" src="assets/sprites/player_lvl3.png" alt="Корабль VOID FRONTIER"></div>
- <p class="menu-subtitle">Ты — сотрудник вымышленной штабной группы розыска СОЧ. Архитектор Бездны угнал флагман и скрывается в космосе. Собери улики, прокачай корабль и перехвати цель.</p>
- <div class="menu-stats" id="menuStats"></div>
- <div class="menu-actions"><button id="continue" class="menu-primary">НАЧАТЬ РОЗЫСК</button><button id="start" class="ghost">ВОЙТИ В АНГАР</button></div>
- <div class="menu-footer">Космобои · 4 операции · 8 мини-боссов · Бездна ∞ · Парад Дебилов<br>Офлайн · один палец · вымышленная история</div>
-</div></div></div>
+<canvas id="game" width="540" height="960" aria-label="Игровое поле"></canvas>
+<div id="ui"><div id="panel" class="screen" style="display:flex"><section class="scr-body"><div class="logo" style="margin-top:30vh"><b>VOID<span>FRONTIER</span></b><small>Загрузка штаба…</small></div></section></div></div>
 <div id="achToast" role="status" aria-live="polite"></div>
 <button id="pause" class="cbtn" aria-label="Пауза">Ⅱ</button>
 <button id="freeze" class="cbtn" aria-label="Excel завис: замедлить врагов"><i>❄</i><span>EXCEL</span></button>
 <button id="hide" class="cbtn" aria-label="Alt+Tab: спрятаться"><i>⌨</i><span>ALT+TAB</span></button>
 <button id="bomb" class="cbtn" aria-label="Бомба"><i>💥</i><span>×<b id="bombCount">2</b></span></button>
+<div id="rotate" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><b>ПОВЕРНИТЕ УСТРОЙСТВО ВЕРТИКАЛЬНО</b><span class="muted">VOID FRONTIER рассчитан на портретный экран 9:16</span></div>
 <script src="js/engine.js"></script>
 <script src="js/save.js"></script>
 <script src="js/audio.js"></script>

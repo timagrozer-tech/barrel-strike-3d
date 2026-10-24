@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required']);pg=b.new_page(viewport={'width':412,'height':915},device_scale_factor=2.6,is_mobile=True,has_touch=True)
     errs=[];pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto('http://localhost:8081/');pg.wait_for_timeout(600);pg.click('#start')
+    pg.goto('http://localhost:8081/');pg.wait_for_timeout(600)
     a=pg.evaluate("()=>{initAudio();for(const n of ['shot','hit','explode','explodeBig','bomb','laser','charge','phase','powerup','win','lose','alert'])sfx(n);return audio.ctx&&audio.ctx.state}")
     print('audio state',a)
     for q in ['low','medium','high']:

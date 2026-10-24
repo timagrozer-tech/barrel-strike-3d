@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Полный регрессионный прогон VOID FRONTIER 2.0 в Chromium (Playwright) через реальный http-сервер.
+"""Полный регрессионный прогон VOID FRONTIER 3.0 в Chromium (Playwright) через реальный http-сервер.
 Запуск: python3 -m http.server 8081 -d www  &&  python3 tests/full.py
 Ускорение: тест подменяет таймеры/HP через JS, но использует реальные функции игры."""
 import json,sys,os
@@ -19,7 +19,7 @@ with sync_playwright() as p:
     # 1. Миграция старого сохранения v1.5
     b,pg=page(p);pg.goto(URL);pg.evaluate(f"localStorage.clear();localStorage.setItem('vf02',{json.dumps(json.dumps(OLD_SAVE))})");pg.reload();pg.wait_for_timeout(800)
     sv=pg.evaluate("JSON.parse(localStorage.getItem('vf02'))")
-    ok('migration: credits/weapon/ship preserved',sv['credits']==5400 and sv['weaponLevel']==6 and sv['weapon']=='plasma' and sv['ship']=='titan')
+    ok('migration: credits kept (+retro achievement rewards)/weapon/ship preserved',sv['credits']>=5400 and sv['weaponLevel']==6 and sv['weapon']=='plasma' and sv['ship']=='titan')
     ok('migration: contraband & cases preserved',sv['contraband']['overdrive'] and sv['contraband']['jammer'] and sv['caseCleared'][:2]==[True,True] and sv['caseUnlocked']==2)
     ok('migration: old storyEndings kept',sv['storyEndings']==['chief'])
     ok('migration: saveVersion=3, hullLevel from old visual tier',sv['saveVersion']==3 and sv['hullLevel']==4,sv['hullLevel'])
@@ -27,21 +27,25 @@ with sync_playwright() as p:
     ok('migration: settings kept',abs(sv['settings']['master']-0.7)<1e-6 and abs(sv['settings']['music']-0.2)<1e-6)
     ok('migration: backup vf02_backup_v1 written',pg.evaluate("!!localStorage.getItem('vf02_backup_v1')"))
     pg.reload();pg.wait_for_timeout(500)
-    ok('reload: profile stable after second load',pg.evaluate("credits")==5400 and pg.evaluate("hullLevel")==4)
+    c1=sv['credits'];ok('reload: profile stable after second load',pg.evaluate("credits")==c1 and pg.evaluate("hullLevel")==4)
     # Экспорт/импорт
     code=pg.evaluate("exportProfileCode()");pg.evaluate("credits=1;persist()")
     pg.evaluate(f"importProfile({json.dumps(code)})")
-    ok('profile export/import roundtrip',pg.evaluate("credits")==5400 and pg.evaluate("hullLevel")==4)
+    ok('profile export/import roundtrip',pg.evaluate("credits")==c1 and pg.evaluate("hullLevel")==4)
     bad=pg.evaluate("(()=>{try{parseProfileCode('VF2:@@@');return 'no'}catch(e){return 'err'}})()")
     ok('import rejects garbage',bad=='err')
     b.close()
 
     # 2. Кампания: 4 операции + финал + 3 концовки
     b,pg=page(p);pg.goto(URL);pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(700)
-    pg.click('#start');ok('hangar opens',pg.evaluate('state')=='menu')
-    ok('hangar has 5 main tabs + codex/settings icons',pg.locator('.hangar-nav button').count()==5 and pg.locator('[data-tab=settings]').count()==1 and pg.locator('[data-tab=codex]').count()==1)
-    pg.click('[data-tab="story"]');ok('5 operations listed',pg.locator('[data-case]').count()==5)
-    ok('ops 2-5 locked at start',pg.locator('[data-case]:disabled').count()==4)
+    ok('HQ home screen on boot',pg.evaluate('state')=='menu' and pg.evaluate('hangarTab')=='home' and pg.locator('#continue').count()==1)
+    ok('bottom nav: 5 sections + settings icon',pg.locator('.bottom-nav [data-go]').count()==5 and pg.locator('.topbar [data-go=settings]').count()==1)
+    ok('UI fonts Oswald/Exo 2 loaded locally',pg.evaluate("document.fonts.check('600 20px Oswald')"))
+    pg.click('.bottom-nav [data-go=ops]');ok('star map: 5 operations',pg.locator('[data-op]').count()==5)
+    pg.click('[data-op="1"]');ok('ops 2-5 locked at start (no start button)',pg.locator('#opStart').count()==0)
+    pg.click('[data-op="0"]');ok('op1 selectable → start button',pg.locator('#opStart').count()==1)
+    pg.click('.bottom-nav [data-go=dossier]');ok('dossier: target switch + tabs',pg.locator('[data-target]').count()==2 and pg.locator('[data-dtab]').count()==4)
+    pg.click('.bottom-nav [data-go=home]');pg.click('#continue');ok('home CTA → op1 briefing',pg.evaluate('state')=='briefing' and pg.evaluate('currentCaseStage')==0)
     for i in range(4):
         pg.evaluate(f"startCaseStage({i})");ok(f'op{i+1}: briefing',pg.evaluate('state')=='briefing')
         pg.click('#briefGo');ok(f'op{i+1}: combat started',pg.evaluate('state')=='play' and pg.evaluate('mode')=='story')
@@ -82,15 +86,18 @@ with sync_playwright() as p:
             pg.evaluate("boss.hp=0");wait_state(pg,'ended');ok('op5 complete: «Призрак пойман» + achievement',pg.evaluate('caseCleared[4]') and pg.evaluate("achievements.includes('phantom')"))
     ok('campaign credits awarded',pg.evaluate('credits')>2000,pg.evaluate('credits'))
     # Прокачка корабля
-    pg.evaluate("credits=20000;menu('ship')");pg.click('#hullUp');ok('hull upgrade 1→2',pg.evaluate('hullLevel')==2)
-    for _ in range(3):pg.click('#hullUp')
+    pg.evaluate("credits=100;fleetSub='ship';menu('fleet')");pg.click('#hullUp')
+    ok('buy confirm: shortage warning, confirm disabled',pg.locator('.confirm .notice.red').count()==1 and pg.locator('.confirm [data-act=ok]').is_disabled())
+    pg.click('.confirm [data-act=no]');ok('buy confirm: cancel closes, nothing spent',pg.locator('.confirm-wrap').count()==0 and pg.evaluate('credits')==100 and pg.evaluate('hullLevel')==1)
+    pg.evaluate("credits=20000;rerender('fleet')");pg.click('#hullUp');pg.click('.confirm [data-act=ok]');ok('hull upgrade 1→2',pg.evaluate('hullLevel')==2)
+    for _ in range(3):pg.click('#hullUp');pg.click('.confirm [data-act=ok]')
     ok('hull reaches level 5 (5th visual stage)',pg.evaluate('hullLevel')==5 and pg.evaluate("IMG.player5.naturalWidth")>0)
     ok('hull 5 adds drone & HP',pg.evaluate('activeDroneCount()')>=1 and pg.evaluate('shipMaxHp()')==150)
     pg.click('[data-preview="2"]');ok('hangar preview of other stage',pg.evaluate('previewTier')==2)
-    pg.click('[data-tab="arsenal"]');pg.click('#upgrade');ok('weapon upgrade still works',pg.evaluate('weaponLevel')==2)
-    pg.click('#drone');pg.click('#missile');ok('drones/missiles purchase',pg.evaluate('drones')==1 and pg.evaluate('missiles')==1)
-    pg.evaluate("menu('shop')");pg.click('[data-buy="specter"]');ok('shop: buy SPECTER',pg.evaluate('shipUnlocked') and pg.evaluate("ship")=='specter')
-    pg.click('[data-buy="valkyrie"]');ok('shop: buy VALKYRIE (class A) and equip',pg.evaluate("ship")=='valkyrie' and 'valkyrie' in pg.evaluate('ownedShips'))
+    pg.click('[data-sub="arsenal"]');pg.click('#upgrade');ok('weapon upgrade still works',pg.evaluate('weaponLevel')==2)
+    pg.click('#drone');pg.wait_for_timeout(100);pg.click('#missile');ok('drones/missiles purchase',pg.evaluate('drones')==1 and pg.evaluate('missiles')==1)
+    pg.evaluate("menu('shop')");pg.click('[data-buy="specter"]');pg.click('.confirm [data-act=ok]');ok('shop: buy SPECTER',pg.evaluate('shipUnlocked') and pg.evaluate("ship")=='specter')
+    pg.click('[data-buy="valkyrie"]');pg.click('.confirm [data-act=ok]');ok('shop: buy VALKYRIE (class A) and equip',pg.evaluate("ship")=='valkyrie' and 'valkyrie' in pg.evaluate('ownedShips'))
     ok('shop: legendary ARCHON locked by rank',pg.locator('[data-buy="archon"]').count()==0)
     pg.click('[data-equip="astra"]');ok('shop: equip owned ship',pg.evaluate("ship")=='astra')
     pg.evaluate("ship='valkyrie';mode='endless';reset()");ok('VALKYRIE: pierce + dmg x1.15',pg.evaluate("Math.abs(perkDamage-1.15)<1e-6"))
@@ -108,7 +115,7 @@ with sync_playwright() as p:
 
     # 3. Штаб → КПП → рынок → покупка → возврат
     b,pg=page(p);pg.goto(URL);pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(600)
-    pg.click('#start');pg.click('#deployBtn');pg.click('#mOffice');ok('prologue',pg.evaluate('state')=='intro')
+    pg.evaluate("menu('ops')");pg.click('#mOffice');ok('prologue',pg.evaluate('state')=='intro')
     pg.click('#prologueOffice');ok('office mission running',pg.evaluate('state')=='office')
     pg.wait_for_timeout(600);pg.screenshot(path=OUT+'f_office.png')
     pg.evaluate("credits=3000;officeRun.hero.x=440;officeRun.hero.y=745;officeRun.target={x:454,y:755}");pg.wait_for_timeout(700)
@@ -129,7 +136,7 @@ with sync_playwright() as p:
 
     # 4. Бездна и Парад
     b,pg=page(p);pg.goto(URL);pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(600)
-    pg.click('#start');pg.click('#deployBtn');pg.click('#mEndless');ok('endless running (not challenge)',pg.evaluate('challengeActive') is None);ok('endless running',pg.evaluate('mode')=='endless' and pg.evaluate('state')=='play')
+    pg.click('#homeAbyss');ok('endless running (not challenge)',pg.evaluate('challengeActive') is None);ok('endless running',pg.evaluate('mode')=='endless' and pg.evaluate('state')=='play')
     pg.evaluate("player.max=1e6;player.hp=1e6;waveClock=35.9");pg.wait_for_function("()=>state==='perk'",timeout=5000);ok('endless perk offer at wave 3',True)
     pg.click('#perk1');ok('perk applied',abs(pg.evaluate('perkDamage')-1.2)<1e-6 and pg.evaluate('state')=='play')
     pg.evaluate("waveClock=48");pg.wait_for_function("()=>!!mini",timeout=5000);ok('endless mini-boss at wave 5',True)
@@ -148,23 +155,25 @@ with sync_playwright() as p:
     # 5. Вьюпорты
     for vw,vh in [(360,720),(390,844),(412,915)]:
         b,pg=page(p,vw,vh);pg.goto(URL);pg.wait_for_timeout(700)
-        ok(f'{vw}x{vh}: splash fits',pg.evaluate("document.querySelector('#panel').scrollHeight<=document.querySelector('#panel').clientHeight+2"))
-        pg.screenshot(path=OUT+f'v_{vw}_splash.png');pg.click('#start')
-        ok(f'{vw}x{vh}: no horizontal overflow',pg.evaluate("document.documentElement.scrollWidth<=innerWidth"))
-        ok(f'{vw}x{vh}: deploy button visible',pg.locator('#deployBtn').is_visible())
-        pg.screenshot(path=OUT+f'v_{vw}_hangar.png')
-        pg.click('#deployBtn');pg.click('#mEndless');pg.wait_for_timeout(1500)
+        ok(f'{vw}x{vh}: home: continue CTA and nav visible',pg.locator('#continue').is_visible() and pg.locator('.bottom-nav').is_visible())
+        for tab in ['home','fleet','ops','dossier','awards','settings']:
+            pg.evaluate(f"menu('{tab}')");pg.wait_for_timeout(250)
+            ok(f'{vw}x{vh}: {tab}: no horizontal overflow',pg.evaluate("document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#panel').scrollWidth<=document.querySelector('#panel').clientWidth+1"))
+            pg.screenshot(path=OUT+f'v_{vw}_{tab}.png')
+        small=pg.evaluate("[...document.querySelectorAll('.bottom-nav button,.btn')].filter(e=>e.offsetParent&&e.getBoundingClientRect().height<44).length")
+        ok(f'{vw}x{vh}: touch targets ≥44px (settings screen)',small==0,small)
+        pg.evaluate("menu('home')");pg.click('#homeAbyss');pg.wait_for_timeout(1500)
         r=pg.evaluate("[document.querySelector('#game').getBoundingClientRect().width,document.querySelector('#game').getBoundingClientRect().height,H]")
         ok(f'{vw}x{vh}: canvas keeps aspect (no stretch)',abs(r[0]/r[1]-540/r[2])<0.01,r)
         bb=pg.evaluate("JSON.stringify(document.querySelector('#bomb').getBoundingClientRect())");pb=json.loads(bb)
         ok(f'{vw}x{vh}: bomb button inside screen',pb['right']<=vw and pb['bottom']<=vh)
         pg.screenshot(path=OUT+f'v_{vw}_play.png');b.close()
     # Прокрутка ангара пальцем (touch-action не должен блокировать)
-    b,pg=page(p);pg.goto(URL);pg.wait_for_timeout(500);pg.click('#start');pg.click('[data-tab="rewards"]')
-    ta=pg.evaluate("[getComputedStyle(document.body).touchAction,getComputedStyle(document.querySelector('.hangar-content')).touchAction]")
-    ok('hangar is touch-scrollable (body not touch-action:none)',ta[0]!='none' and 'pan-y' in ta[1],ta)
-    pg.mouse.move(206,600);sc0=pg.evaluate("document.querySelector('.hangar-content').scrollTop");pg.mouse.wheel(0,600);pg.wait_for_timeout(300)
-    ok('hangar content scrolls',pg.evaluate("document.querySelector('.hangar-content').scrollTop")>sc0);b.close()
+    b,pg=page(p);pg.goto(URL);pg.wait_for_timeout(500);pg.click('.bottom-nav [data-go=awards]')
+    ta=pg.evaluate("[getComputedStyle(document.body).touchAction,getComputedStyle(document.querySelector('.scr-body')).touchAction]")
+    ok('screens are touch-scrollable (body not touch-action:none)',ta[0]!='none' and 'pan-y' in ta[1],ta)
+    pg.mouse.move(206,500);sc0=pg.evaluate("document.querySelector('.scr-body').scrollTop");pg.mouse.wheel(0,600);pg.wait_for_timeout(300)
+    ok('awards screen scrolls',pg.evaluate("document.querySelector('.scr-body').scrollTop")>sc0);b.close()
 ok('no JS errors',not errors,errors[:5])
 fails=[r for r in results if not r[1]]
 print(f'\nИТОГО: {len(results)-len(fails)}/{len(results)} PASS')

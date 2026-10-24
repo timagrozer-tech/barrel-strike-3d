@@ -1,8 +1,12 @@
 /* VOID FRONTIER — service worker (генерируется tools/gen_sw.py). Версия кеша меняется при любом изменении файлов. */
-const CACHE='void-frontier-v2.0-f021e48c4b';
+const CACHE='void-frontier-v2.0-230fc1d115';
 const ASSETS=[
  './',
  './assets/architect.jpg',
+ './assets/fonts/OFL_Exo2.txt',
+ './assets/fonts/OFL_Oswald.txt',
+ './assets/fonts/exo2.woff',
+ './assets/fonts/oswald.woff',
  './assets/sprites/arch_glow.png',
  './assets/sprites/arch_hull.png',
  './assets/sprites/arch_wing_l.png',
@@ -33,6 +37,14 @@ const ASSETS=[
  './assets/sprites/ship_hive.png',
  './assets/sprites/ship_nova.png',
  './assets/sprites/ship_valkyrie.png',
+ './assets/ui/card_abyss.jpg',
+ './assets/ui/card_dossier.jpg',
+ './assets/ui/card_fleet.jpg',
+ './assets/ui/card_ops.jpg',
+ './assets/ui/card_phantom.jpg',
+ './assets/ui/wanted_architect.jpg',
+ './assets/ui/wanted_phantom.jpg',
+ './css/ui.css',
  './icon-192.png',
  './icon-512.png',
  './icon.svg',

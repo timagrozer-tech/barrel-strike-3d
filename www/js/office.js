@@ -54,7 +54,7 @@ const officeMission={
   lowerMarketKnown=true;officeRun.marketVisited=true;persist();
   marketMission.start();
  },
- pause(){if(state!=='office')return;state='officePause';panel.style.display='block';panel.innerHTML='<div class="dialog-scene"><h1>ПАУЗА · ШТАБ</h1><p>Твои документы и патрули остаются на месте.</p><button id="officeResume">ПРОДОЛЖИТЬ</button><button id="officeQuit" class="ghost">В АНГАР</button></div>';document.querySelector('#officeResume').onclick=()=>{state='office';panel.style.display='none';last=performance.now()};document.querySelector('#officeQuit').onclick=()=>menu('story')},
+ pause(){if(state!=='office')return;state='officePause';dlg();panel.innerHTML='<div class="dialog-scene"><h1>ПАУЗА · ШТАБ</h1><p>Твои документы и патрули остаются на месте.</p><button id="officeResume">ПРОДОЛЖИТЬ</button><button id="officeQuit" class="ghost">В АНГАР</button></div>';document.querySelector('#officeResume').onclick=()=>{state='office';panel.style.display='none';last=performance.now()};document.querySelector('#officeQuit').onclick=()=>menu('story')},
  update(dt){
   const r=officeRun;if(!r)return;r.elapsed+=dt;r.announceTime=Math.max(0,r.announceTime-dt);r.hide=Math.max(0,r.hide-dt);r.hideCd=Math.max(0,r.hideCd-dt);r.freeze=Math.max(0,r.freeze-dt);r.freezeCd=Math.max(0,r.freezeCd-dt);r.guardCooldown=Math.max(0,r.guardCooldown-dt);r.beamCd=Math.max(0,r.beamCd-dt);
   if(r.elapsed<dt+.03||Math.floor((r.elapsed-dt)*4)!==Math.floor(r.elapsed*4))hqButtons();
@@ -94,12 +94,12 @@ const officeMission={
  },
  win(){
   const r=officeRun;if(!r||state!=='office')return;state='officeComplete';hideBtn.style.display='none';freezeBtn.style.display='none';pauseBtn.style.display='none';const earned=Math.max(100,Math.round(550-r.elapsed*2-r.caught*60))+(r.bonus.taken?r.bonus.reward:0);credits+=earned;
-  if(!officeCleared||officeBest===0||r.elapsed<officeBest)officeBest=Math.round(r.elapsed*10)/10;officeCleared=true;persist();sfx('win');panel.style.display='block';panel.classList.add('office-dialog');
+  if(!officeCleared||officeBest===0||r.elapsed<officeBest)officeBest=Math.round(r.elapsed*10)/10;officeCleared=true;persist();sfx('win');dlg();panel.classList.add('office-dialog');
   panel.innerHTML=`<div class="dialog-scene"><span class="eyebrow">ДОПОЛНИТЕЛЬНАЯ МИССИЯ · АРХИВ РОЗЫСКА</span><h1>«СЛЕД БЕГЛЕЦА»</h1><p>Ты нашёл служебный журнал, телеметрию беглеца и приказ № 000. На планшете загораются координаты его последнего следа.</p><div class="office-stat">ВРЕМЯ: ${r.elapsed.toFixed(1)} с<br>ОБНАРУЖЕНИЙ: ${r.caught}<br>ДОП. ПОРУЧЕНИЕ: ${r.bonus.taken?'ВЫПОЛНЕНО':'НЕ ВЫПОЛНЕНО'}<br>НИЖНИЙ РЫНОК: ${r.marketVisited?'ПОСЕЩЁН':'НЕТ'}<br>ЗАРАБОТАНО: ${earned} ₡<br>ЛУЧШЕЕ ВРЕМЯ: ${officeBest.toFixed(1)} с</div><button id="officeFly">НАЧАТЬ ПОГОНЮ В КОСМОСЕ →</button><button class="ghost" id="officeReturn">В АНГАР</button></div>`;
   document.getElementById('officeFly').onclick=()=>startCaseStage(caseUnlocked);
   document.getElementById('officeReturn').onclick=()=>menu('story');
  },
- lose(){state='officeFail';hideBtn.style.display='none';freezeBtn.style.display='none';pauseBtn.style.display='none';panel.style.display='block';panel.innerHTML='<div class="dialog-scene"><h1>НАЧАЛЬСТВО ТЕБЯ НАШЛО</h1><p>Тебя трижды заметили при поиске материалов. Архивный след остаётся закрытым, но космический розыск доступен из ангара.</p><button id="officeRetry">ПОВТОРИТЬ ПОПЫТКУ</button><button id="officeBack" class="ghost">В АНГАР</button></div>';document.querySelector('#officeRetry').onclick=()=>officeMission.start();document.querySelector('#officeBack').onclick=()=>menu('story');sfx('lose')},
+ lose(){state='officeFail';hideBtn.style.display='none';freezeBtn.style.display='none';pauseBtn.style.display='none';dlg();panel.innerHTML='<div class="dialog-scene"><h1>НАЧАЛЬСТВО ТЕБЯ НАШЛО</h1><p>Тебя трижды заметили при поиске материалов. Архивный след остаётся закрытым, но космический розыск доступен из ангара.</p><button id="officeRetry">ПОВТОРИТЬ ПОПЫТКУ</button><button id="officeBack" class="ghost">В АНГАР</button></div>';document.querySelector('#officeRetry').onclick=()=>officeMission.start();document.querySelector('#officeBack').onclick=()=>menu('story');sfx('lose')},
  render(){
   const r=officeRun;if(!r)return;
   g.save();g.clearRect(0,0,W,960);const grd=g.createLinearGradient(0,0,W,H);grd.addColorStop(0,'#061a2c');grd.addColorStop(1,'#0a2634');g.fillStyle=grd;g.fillRect(0,0,W,960);

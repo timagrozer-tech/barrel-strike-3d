@@ -1,19 +1,31 @@
-import sys,json
+#!/usr/bin/env python3
+"""Скриншоты экранов дизайна №2 (штаб, флот, операции, досье, награды, настройки, бой) на 360/412 px. VF_OUT задаёт папку."""
+import sys
 from playwright.sync_api import sync_playwright
-OUT='/tmp/claude-0/s/'
-vw,vh=(int(x) for x in (sys.argv[1] if len(sys.argv)>1 else '412x915').split('x'))
+import os;OUT=os.environ.get('VF_OUT','/tmp/vf_shots').rstrip('/')+'/';os.makedirs(OUT,exist_ok=True)
+errs=[]
 with sync_playwright() as p:
-    b=p.chromium.launch()
-    pg=b.new_page(viewport={'width':vw,'height':vh},device_scale_factor=2,is_mobile=True,has_touch=True)
-    errs=[];pg.on('pageerror',lambda e:errs.append('PAGEERR '+str(e)));pg.on('console',lambda m:errs.append(m.text) if m.type=='error' else None)
-    pg.goto('http://localhost:8081/');pg.wait_for_timeout(1200)
-    pg.screenshot(path=OUT+'q_splash.png')
-    pg.click('#start');pg.wait_for_timeout(600);pg.screenshot(path=OUT+'q_hangar.png')
-    for tab in ['arsenal','story','codex','settings']:
-        pg.click(f'[data-tab="{tab}"]');pg.wait_for_timeout(300);pg.screenshot(path=OUT+f'q_{tab}.png')
-    pg.click('#deployBtn');pg.wait_for_timeout(300);pg.screenshot(path=OUT+'q_modes.png')
-    pg.click('#mCampaign');pg.wait_for_timeout(300);pg.screenshot(path=OUT+'q_brief.png')
-    pg.click('#briefGo');pg.wait_for_timeout(5000);pg.screenshot(path=OUT+'q_play.png')
-    print('state',pg.evaluate('state'),'H',pg.evaluate('H'),'foes',pg.evaluate('foes.length'),'fps',pg.evaluate('perfMon.fps'))
-    print('errors',errs[:10])
-    b.close()
+  b=p.chromium.launch()
+  for vw,vh in [(360,720),(412,915)]:
+    pg=b.new_page(viewport={'width':vw,'height':vh},device_scale_factor=2,has_touch=True)
+    pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
+    pg.goto('http://localhost:8081/index.html');pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(1200)
+    def shot(n):pg.wait_for_timeout(400);pg.screenshot(path=OUT+f'{vw}_{n}.png')
+    shot('home')
+    for t in ['fleet','ops','dossier','awards']:
+      pg.evaluate(f"menu('{t}')");shot(t)
+    pg.evaluate("fleetSub='shop';menu('fleet')");shot('shipyard')
+    pg.evaluate("fleetSub='arsenal';menu('fleet')");shot('arsenal')
+    pg.evaluate("menu('settings')");shot('settings')
+    pg.evaluate("fleetSub='ship';menu('fleet')");pg.click('#hullUp');shot('confirm')
+    pg.evaluate("document.querySelector('.confirm-wrap')&&document.querySelector('.confirm-wrap').remove();menu('home')")
+    pg.click('#continue');shot('briefing')
+    pg.evaluate("[...document.querySelectorAll('#panel button')].pop().click()");pg.wait_for_timeout(300);shot('after_brief')
+    for i in range(4):
+      if pg.evaluate("state")!='play':pg.evaluate("[...document.querySelectorAll('#panel button')].pop().click()");pg.wait_for_timeout(300)
+    pg.wait_for_timeout(2500);shot('combat')
+    pg.evaluate("spawnBoss('architect');boss.y=boss.ty");pg.wait_for_timeout(800);shot('boss')
+    pg.evaluate("pauseGame()");shot('pause')
+    pg.close()
+  b.close()
+print('ERRS',errs[:10])
