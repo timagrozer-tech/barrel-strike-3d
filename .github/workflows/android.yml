@@ -89,12 +89,15 @@ jobs:
           name: VOID_FRONTIER_APK
           path: dist/*.apk
           retention-days: 30
-      - name: Publish GitHub Release (for tags v*)
-        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/void-frontier-v')
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/void-frontier'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('void-frontier-v2.0.{0}', github.run_number) }}
+          target_commitish: ${{ github.sha }}
+          make_latest: false
           files: dist/*.apk
-          name: VOID FRONTIER ${{ github.ref_name }}
+          name: VOID FRONTIER 2.0.${{ github.run_number }}
           body: |
             VOID FRONTIER 2.0 — APK для Android (debug-подпись, установка «из неизвестных источников»).
             Подробности: README.md и CHANGELOG.md в ветке void-frontier.
