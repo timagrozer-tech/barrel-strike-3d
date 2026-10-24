@@ -15,16 +15,16 @@ function lmCircleRect(x,y,r,o){const cx=Math.max(o.x,Math.min(x,o.x+o.w)),cy=Mat
 function lmSolid(x,y,r=13){return x-r<LM_RANGE.minX||x+r>LM_RANGE.maxX||y-r<LM_RANGE.minY||y+r>LM_RANGE.maxY||LM_STALLS.some(o=>lmCircleRect(x,y,r,o))}
 function lmMove(x,y){const h=marketRun.hero;if(!lmSolid(x,h.y))h.x=x;if(!lmSolid(h.x,y))h.y=y}
 function lmNotice(text,duration=2.2){const r=marketRun;r.notice=text;r.noticeTime=duration}
-function lmStatusButtons(){const r=marketRun;if(!r)return;hideBtn.textContent=r.hideCd>0?'ALT+TAB '+Math.ceil(r.hideCd)+'с':'⌨ ALT+TAB';freezeBtn.textContent=r.freezeCd>0?'EXCEL '+Math.ceil(r.freezeCd)+'с':'❄ EXCEL ЗАВИС';hideBtn.disabled=r.hideCd>0;freezeBtn.disabled=r.freezeCd>0}
+function lmStatusButtons(){const r=marketRun;if(!r)return;setAbilityButton(hideBtn,'ALT+TAB','⌨',r.hideCd,15);setAbilityButton(freezeBtn,'EXCEL','❄',r.freezeCd,20)}
 function lmPatrol(x,y,stops,speed=80){return {x,y,stops,waypoint:1,speed,angle:-Math.PI/2,range:125}}
 const marketMission={
  start(){
-  state='market';panel.classList.remove('hangar','office-dialog');panel.style.display='none';bombBtn.style.display='none';pauseBtn.style.display='block';hideBtn.style.display='block';freezeBtn.style.display='block';
+  state='market';panel.classList.remove('hangar','office-dialog');panel.style.display='none';bombBtn.style.display='none';pauseBtn.style.display='flex';hideBtn.style.display='flex';freezeBtn.style.display='flex';
   marketVisits++;lowerMarketKnown=true;persist();
   marketRun={hero:{x:270,y:858},target:{x:270,y:858},keys:new Set(),elapsed:0,heat:10,hide:0,hideCd:0,freeze:0,freezeCd:0,scannerCd:0,shopCd:1.5,guardAlert:false,raid:false,raidTimer:0,inspectors:[lmPatrol(268,562,[{x:268,y:360},{x:268,y:696}],74),lmPatrol(313,440,[{x:210,y:440},{x:323,y:440}],56)],notice:'НИЖНИЙ РЫНОК · ПОДХОДИ К ПРИЛАВКАМ',noticeTime:4,sparks:Array.from({length:36},(_,i)=>({x:40+(i*73)%458,y:195+(i*101)%680,s:(i%3)+1}))};
   audio.scene='';audio.beat=0;audio.step=0;sfx('market');lmStatusButtons();last=performance.now();
  },
- point(e){if(!marketRun)return;const b=c.getBoundingClientRect();marketRun.target={x:clamp((e.clientX-b.left)/b.width*W,43,498),y:clamp((e.clientY-b.top)/b.height*H,196,900)}},
+ point(e){if(!marketRun)return;const p=toScene(e);marketRun.target={x:clamp(p.x,43,498),y:clamp(p.y,196,900)}},
  hide(){if(state!=='market'||!marketRun||marketRun.hideCd>0)return;const r=marketRun;r.hide=3.2;r.hideCd=15;r.heat=Math.max(0,r.heat-15);lmNotice('ALT+TAB · КАМЕРЫ ТЕБЯ НЕ ВИДЯТ');sfx('hide');lmStatusButtons()},
  freeze(){if(state!=='market'||!marketRun||marketRun.freezeCd>0)return;const r=marketRun;r.freeze=4;r.freezeCd=20;lmNotice('EXCEL ЗАВИС · ОХРАНА ЗАМЕРЛА');sfx('freeze');lmStatusButtons()},
  showShop(v){
@@ -45,7 +45,7 @@ const marketMission={
   const r=marketRun;
   if(caught){marketRaids++;const fine=Math.min(credits,100);credits-=fine;officeRun.alert=Math.max(officeRun.alert,66);officeRun.hide=2;hqAnnouncement('ОБЛАВА! ШТРАФ '+fine+' ₡ И ПОИСК НАЧАЛЬСТВА',4)}
   else{officeRun.alert=clamp(officeRun.alert+Math.round(r.heat*.2),0,95);hqAnnouncement('ПОКУПКИ В КОРАБЛЕ. ВОЗВРАЩАЙСЯ В ШТАБ',3)}
-  persist();state='office';panel.style.display='none';panel.classList.remove('office-dialog');officeRun.hero.x=333;officeRun.hero.y=787;officeRun.target={x:333,y:787};hideBtn.style.display='block';freezeBtn.style.display='block';hqButtons();audio.scene='';sfx('door');last=performance.now();
+  persist();state='office';panel.style.display='none';panel.classList.remove('office-dialog');officeRun.hero.x=333;officeRun.hero.y=787;officeRun.target={x:333,y:787};hideBtn.style.display='flex';freezeBtn.style.display='flex';hqButtons();audio.scene='';sfx('door');last=performance.now();
  },
  pause(){if(state!=='market')return;state='marketPause';panel.style.display='block';panel.innerHTML='<div class="dialog-scene"><h1>ПАУЗА · НИЖНИЙ РЫНОК</h1><p>Подозрение и охрана заморожены, пока игра на паузе.</p><button id="lmResume">ПРОДОЛЖИТЬ</button><button id="lmLeave" class="ghost">ПОКИНУТЬ РЫНОК</button></div>';document.getElementById('lmResume').onclick=()=>{state='market';panel.style.display='none';last=performance.now()};document.getElementById('lmLeave').onclick=()=>marketMission.exit(marketRun.raid)},
  update(dt){
@@ -73,8 +73,8 @@ const marketMission={
  },
  render(){
   const r=marketRun;if(!r)return;
-  g.save();g.clearRect(0,0,W,H);const t=r.elapsed;
-  const bg=g.createLinearGradient(0,145,W,H);bg.addColorStop(0,'#110d2d');bg.addColorStop(.54,'#101a2f');bg.addColorStop(1,'#071b29');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  g.save();g.clearRect(0,0,W,960);const t=r.elapsed;
+  const bg=g.createLinearGradient(0,145,W,H);bg.addColorStop(0,'#110d2d');bg.addColorStop(.54,'#101a2f');bg.addColorStop(1,'#071b29');g.fillStyle=bg;g.fillRect(0,0,W,960);
   // Floor and cyberpunk industrial grid.
   g.fillStyle='#111b2f';g.fillRect(32,157,476,755);g.strokeStyle='#4b3869';g.lineWidth=3;g.strokeRect(33,158,474,753);
   for(let y=178;y<915;y+=33){g.strokeStyle='rgba(114,102,180,.12)';g.lineWidth=1;g.beginPath();g.moveTo(34,y);g.lineTo(505,y);g.stroke()}

@@ -34,10 +34,10 @@ function hqBlockedSight(x1,y1,x2,y2){const d=Math.hypot(x2-x1,y2-y1),steps=Math.
 function hqMoveHero(x,y){const h=officeRun.hero;const desiredX=Math.max(HQ_NAV.minX+14,Math.min(HQ_NAV.maxX-14,x)),desiredY=Math.max(HQ_NAV.minY+14,Math.min(HQ_NAV.maxY-14,y));if(!hqSolid(desiredX,h.y))h.x=desiredX;if(!hqSolid(h.x,desiredY))h.y=desiredY}
 function hqOfficer(x,y,stops,speed=70,range=145){return {x,y,stops,waypoint:1,angle:0,speed,range,noticed:false,blink:0}}
 function hqAnnouncement(message,duration=2.6){if(!officeRun)return;officeRun.announcement=message;officeRun.announceTime=duration}
-function hqButtons(){if(!officeRun)return;hideBtn.textContent=officeRun.hideCd>0?'ALT+TAB '+Math.ceil(officeRun.hideCd)+'с':'⌨ ALT+TAB';freezeBtn.textContent=officeRun.freezeCd>0?'EXCEL '+Math.ceil(officeRun.freezeCd)+'с':'❄ EXCEL ЗАВИС';hideBtn.disabled=officeRun.hideCd>0;freezeBtn.disabled=officeRun.freezeCd>0}
+function hqButtons(){if(!officeRun)return;setAbilityButton(hideBtn,'ALT+TAB','⌨',officeRun.hideCd,15);setAbilityButton(freezeBtn,'EXCEL','❄',officeRun.freezeCd,20)}
 const officeMission={
  start(){
-  mode='story';state='office';panel.classList.remove('hangar','office-dialog');panel.style.display='none';bombBtn.style.display='none';pauseBtn.style.display='block';hideBtn.style.display='block';freezeBtn.style.display='block';
+  mode='story';state='office';panel.classList.remove('hangar','office-dialog');panel.style.display='none';bombBtn.style.display='none';pauseBtn.style.display='flex';hideBtn.style.display='flex';freezeBtn.style.display='flex';
   officeRun={hero:{x:270,y:837},target:{x:270,y:837},tasks:HQ_TASKS.map(t=>({...t})),
    patrols:[hqOfficer(232,680,[{x:190,y:680},{x:350,y:680}],68,139),hqOfficer(350,517,[{x:350,y:402},{x:350,y:555}],73,145),hqOfficer(215,285,[{x:188,y:285},{x:356,y:285}],62,153)],
    elapsed:0,alert:12,caught:0,delivered:0,bonus:{...HQ_BONUS[Math.floor(Math.random()*HQ_BONUS.length)],taken:false},hide:0,hideCd:0,freeze:0,freezeCd:0,guardCooldown:0,
@@ -45,7 +45,7 @@ const officeMission={
    exitReady:false,keys:new Set(),footTime:0,chief:null,marketKnown:false,marketVisited:false,beamCd:0,beamHits:0};
   target={x:270,y:837};audio.scene='';audio.beat=0;audio.step=0;sfx('door');hqButtons();last=performance.now();
  },
- point(e){if(!officeRun)return;const r=c.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;officeRun.target={x:clamp(x,60,480),y:clamp(y,184,886)}},
+ point(e){if(!officeRun)return;const {x,y}=toScene(e);officeRun.target={x:clamp(x,60,480),y:clamp(y,184,886)}},
  hide(){if(state!=='office'||!officeRun||officeRun.hideCd>0)return;officeRun.hide=3.2;officeRun.hideCd=15;officeRun.alert=Math.max(0,officeRun.alert-22);hqAnnouncement('ALT+TAB · НЕВИДИМ ДЛЯ ПАТРУЛЯ',1.8);sfx('hide');hqButtons()},
  freeze(){if(state!=='office'||!officeRun||officeRun.freezeCd>0)return;officeRun.freeze=4;officeRun.freezeCd=20;hqAnnouncement('EXCEL ЗАВИС · ПАТРУЛИ ОСТАНОВЛЕНЫ',1.8);sfx('freeze');hqButtons()},
 
@@ -102,7 +102,7 @@ const officeMission={
  lose(){state='officeFail';hideBtn.style.display='none';freezeBtn.style.display='none';pauseBtn.style.display='none';panel.style.display='block';panel.innerHTML='<div class="dialog-scene"><h1>НАЧАЛЬСТВО ТЕБЯ НАШЛО</h1><p>Тебя трижды заметили при поиске материалов. Архивный след остаётся закрытым, но космический розыск доступен из ангара.</p><button id="officeRetry">ПОВТОРИТЬ ПОПЫТКУ</button><button id="officeBack" class="ghost">В АНГАР</button></div>';document.querySelector('#officeRetry').onclick=()=>officeMission.start();document.querySelector('#officeBack').onclick=()=>menu('story');sfx('lose')},
  render(){
   const r=officeRun;if(!r)return;
-  g.save();g.clearRect(0,0,W,H);const grd=g.createLinearGradient(0,0,W,H);grd.addColorStop(0,'#061a2c');grd.addColorStop(1,'#0a2634');g.fillStyle=grd;g.fillRect(0,0,W,H);
+  g.save();g.clearRect(0,0,W,960);const grd=g.createLinearGradient(0,0,W,H);grd.addColorStop(0,'#061a2c');grd.addColorStop(1,'#0a2634');g.fillStyle=grd;g.fillRect(0,0,W,960);
   g.fillStyle='#0a2432';g.fillRect(29,144,482,770);g.strokeStyle='#326b80';g.lineWidth=4;g.strokeRect(30,148,480,763);
   g.save();g.beginPath();g.rect(32,150,476,758);g.clip();
   for(let y=170;y<=915;y+=40){g.strokeStyle='rgba(119,182,206,.07)';g.lineWidth=1;g.beginPath();g.moveTo(31,y);g.lineTo(510,y);g.stroke()}
@@ -137,7 +137,7 @@ const officeMission={
   g.fillStyle='#1e3647';g.fillRect(17,70,505,15);g.fillStyle=r.alert>70?'#ff5369':r.alert>40?'#ffc565':'#4ae2ba';g.fillRect(17,70,505*r.alert/100,15);
   g.fillStyle='#d4e8ed';g.font='bold 13px system-ui';g.fillText('ПОДОЗРЕНИЕ '+Math.floor(r.alert)+'%',18,104);g.fillText(r.exitReady?'ЗАДАНИЯ ЗАКРЫТЫ! ВЫХОД ↑':'ПАПКИ И ПОРУЧЕНИЯ',18,128);g.textAlign='right';g.fillText('НИЖНИЙ РЫНОК ↘',520,128);g.textAlign='left';
   if(r.announceTime>0){g.fillStyle='rgba(5,20,34,.88)';g.fillRect(0,377,W,94);g.fillStyle=r.alert>65?'#ff7988':'#ffd58b';g.font='bold 16px system-ui';g.textAlign='center';g.fillText(r.announcement.slice(0,47),W/2,416);g.fillStyle='#a4cbd5';g.font='12px system-ui';g.fillText('ПРИКА́З № 000 · СОВЕРШЕННО НЕ ВОВРЕМЯ',W/2,443)}
-  if(r.alert>=72){g.fillStyle='rgba(210,25,48,.13)';g.fillRect(0,142,W,H-142);g.fillStyle='#ff8c91';g.textAlign='center';g.font='bold 18px system-ui';g.fillText('НАЧАЛЬСТВО ИДЁТ!',W/2,188)}
+  if(r.alert>=72){g.fillStyle='rgba(210,25,48,.13)';g.fillRect(0,142,W,960-142);g.fillStyle='#ff8c91';g.textAlign='center';g.font='bold 18px system-ui';g.fillText('НАЧАЛЬСТВО ИДЁТ!',W/2,188)}
   g.fillStyle='#d0eafa';g.textAlign='center';g.font='12px system-ui';g.fillText('Касайся пола и веди персонажа · ALT+TAB / EXCEL ЗАВИС',W/2,932);
   g.restore();
  }
