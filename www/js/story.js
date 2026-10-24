@@ -8,8 +8,11 @@ const CASE_OPERATIONS=[
  {title:'ПОТЕРЯННЫЙ СИГНАЛ',sector:'ОРБИТА «ОРИОН»',brief:'Перехвачена запись о самовольном уходе Архитектора. Собери фрагменты телеметрии и уничтожь ложные маяки.',evidence:'Журнал выхода из сектора',mini:'duck',tint:'#1b5b72',reward:300},
  {title:'ЦВЕТОЧНЫЙ СЛЕД',sector:'ТУМАННОСТЬ «АЗАЛИЯ»',brief:'Беглец оставил след в биомеханическом облаке. Его курьер прячет данные за энергетическими ловушками.',evidence:'Маршрут беглеца',mini:'flower',tint:'#79357d',reward:425},
  {title:'ОБХОД НИЖНЕГО КПП',sector:'СТАНЦИЯ «КПП-7»',brief:'Получен сигнал с подпольной станции. Прорвись через укреплённые перехватчики и найди код флагмана.',evidence:'Код скрытого флагмана',mini:'slipper',tint:'#8c6235',reward:550},
- {title:'ОПЕРАЦИЯ «НУЛЕВОЙ»',sector:'СЕКТОР «БЕЗДНА»',brief:'Архитектор скрывается на флагмане. Собери последние доказательства, победи охрану «Я Кавказ» и выйди на цель.',evidence:'Доказательство по делу № 000',mini:'mountain',tint:'#8c244a',reward:800}
+ {title:'ОПЕРАЦИЯ «НУЛЕВОЙ»',sector:'СЕКТОР «БЕЗДНА»',brief:'Архитектор скрывается на флагмане. Собери последние доказательства, победи охрану «Я Кавказ» и выйди на цель.',evidence:'Доказательство по делу № 000',mini:'mountain',tint:'#8c244a',reward:800,boss:'architect'},
+ {title:'ПРИЗРАК САМОВОЛКИ',sector:'ТУМАННОСТЬ «ЦИФРА»',brief:'На допросе Архитектор проговорился: настоящий мозг побега — его бывший штурман по прозвищу Капитан Ухмылка, второй самый опасный беглец во вселенной. Он увёл маскировочное ядро «Цифра» и прячется в пиксельной туманности на стелс-крейсере «Невидимка». Найди его, пока он снова не исчез.',evidence:'Маскировочное ядро «Цифра»',mini:'sock',tint:'#3f6a2a',reward:1200,boss:'phantom'}
 ];
+const BOSS_INFO={architect:{name:'АРХИТЕКТОР БЕЗДНЫ',ship:'ФЛАГМАН'},phantom:{name:'КАПИТАН УХМЫЛКА',ship:'«НЕВИДИМКА»'}};
+const LAST_OP=CASE_OPERATIONS.length-1;
 let currentCaseStage=0,caseTraceCount=0,caseBeacons=0,caseSpawnedMini=false,caseFinalFlag=false;
 function caseCurrent(){return CASE_OPERATIONS[currentCaseStage]||CASE_OPERATIONS[0]}
 function startCaseStage(stage){
@@ -20,8 +23,8 @@ function startCaseStage(stage){
 function showBriefing(n){
  const op=CASE_OPERATIONS[n],m=MINI.find(x=>x.kind===op.mini);
  state='briefing';panel.classList.remove('hangar','office-dialog');panel.style.display='block';document.body.classList.remove('in-combat');
- panel.innerHTML=`<div class="dialog-scene briefing" style="--tint:${op.tint}"><span class="eyebrow">ДЕЛО № 000 · ОПЕРАЦИЯ ${n+1}/4</span><h1>${op.title}</h1><div class="brief-sector">${op.sector}</div><p>${op.brief}</p>
- <div class="terminal"><span>ЦЕЛЬ: собрать 3 капсулы-улики (${officeCleared?'1 уже есть из архива штаба':'архив штаба даёт стартовую улику'})</span><span>ПОМОЩНИК БЕГЛЕЦА: ${m.name} — ${m.attack}</span>${n===3?'<span class="warn">ПОСЛЕ ОХРАНЫ — ФЛАГМАН АРХИТЕКТОРА</span>':''}<span>НАГРАДА: ${op.reward} ₡ + бонус за улики</span></div>
+ panel.innerHTML=`<div class="dialog-scene briefing" style="--tint:${op.tint}"><span class="eyebrow">ДЕЛО № 000 · ОПЕРАЦИЯ ${n+1}/${CASE_OPERATIONS.length}</span><h1>${op.title}</h1><div class="brief-sector">${op.sector}</div><p>${op.brief}</p>
+ <div class="terminal"><span>ЦЕЛЬ: собрать 3 капсулы-улики (${officeCleared?'1 уже есть из архива штаба':'архив штаба даёт стартовую улику'})</span><span>ПОМОЩНИК БЕГЛЕЦА: ${m.name} — ${m.attack}</span>${op.boss==='architect'?'<span class="warn">ПОСЛЕ ОХРАНЫ — ФЛАГМАН АРХИТЕКТОРА</span>':op.boss==='phantom'?'<span class="warn">ПОСЛЕ ОХРАНЫ — СТЕЛС-КРЕЙСЕР КАПИТАНА УХМЫЛКИ</span>':''}<span>НАГРАДА: ${op.reward} ₡ + бонус за улики</span></div>
  <button id="briefGo">НА ВЫЛЕТ 🚀</button><button id="briefBack" class="ghost">К ДОСЬЕ</button><p class="hint">Улики подбирай в космосе. Красные пунктирные зоны — предупреждения об атаке: уйди из них.</p></div>`;
  document.getElementById('briefGo').onclick=()=>{initAudio();launchCaseStage(n)};
  document.getElementById('briefBack').onclick=()=>menu('story');
@@ -49,12 +52,16 @@ function finishCaseStage(){
 function showPrologue(){
  state='intro';panel.classList.remove('hangar');panel.style.display='block';document.body.classList.remove('in-combat');bombBtn.style.display='none';pauseBtn.style.display='none';hideBtn.style.display='none';freezeBtn.style.display='none';
  panel.innerHTML=`<div class="dialog-scene"><span class="eyebrow">07:59 · ШТАБНАЯ ГРУППА РОЗЫСКА СОЧ</span><h1>«ГДЕ АРХИТЕКТОР?»</h1><p>Ты работаешь в группе розыска СОЧ. На стол поступает дело № 000: Архитектор Бездны самовольно покинул космическую часть и улетел на секретном флагмане. Вместо рапорта он оставил сообщение: «НЕ ДОГОНИШЬ».</p><div class="terminal"><span>ДЕЛО № 000 · ЦЕЛЬ: «АРХИТЕКТОР БЕЗДНЫ»</span><span>ПОСЛЕДНИЙ СИГНАЛ: ОРБИТА «ОРИОН»</span><span class="warn">ВНИМАНИЕ: ЦЕЛЬ МОЖЕТ ПОДГОТОВИТЬ ЛОВУШКУ</span></div><p>Космический перехват — твоя основная работа. Но в архиве штаба можно найти полезные материалы и доступ к Нижнему рынку.</p><button id="prologueStart">НАЧАТЬ КОСМИЧЕСКИЙ РОЗЫСК 🚀</button><button id="prologueOffice" class="ghost">ПОИСКАТЬ УЛИКИ В ШТАБЕ</button><button id="prologueBack" class="ghost">К ДОСЬЕ</button></div>`;
- document.getElementById('prologueStart').onclick=()=>startCaseStage(Math.min(caseUnlocked,3));
+ document.getElementById('prologueStart').onclick=()=>startCaseStage(Math.min(caseUnlocked,LAST_OP));
  document.getElementById('prologueOffice').onclick=()=>{sfx('door');officeMission.start()};
  document.getElementById('prologueBack').onclick=()=>menu('story');
 }
 function showInterlude(){
  story.interlude=true;state='dialog';panel.style.display='block';
+ if(caseCurrent().boss==='phantom'){
+  panel.innerHTML=`<div class="dialog-scene"><span class="eyebrow">ПЕРЕХВАТ ЛИЧНОГО КАНАЛА</span><h1>«Я ПРОСТО ВЫШЕЛ ЗА ХЛЕБОМ»</h1><p>Носок Апокалипсиса повержен. В эфире раздаётся довольный голос: Капитан Ухмылка уверяет, что ни в чём не виноват — он просто «вышел за хлебом». Три года назад. Радар показывает пустоту… но пустота улыбается.</p><div class="terminal"><span>СИГНАЛ: СТЕЛС-КРЕЙСЕР «НЕВИДИМКА»</span><span>МАСКИРОВКА «ЦИФРА» АКТИВНА</span><span class="warn">ОСТОРОЖНО: ЛОЖНЫЕ ЦЕЛИ И ТЕЛЕПОРТ</span></div><button id="dialogNext">ВЗЯТЬ ПРИЗРАКА →</button></div>`;
+  document.getElementById('dialogNext').onclick=()=>{state='play';panel.style.display='none';last=performance.now();announce('ЦЕЛЬ: КАПИТАН УХМЫЛКА',3,'ВТОРОЙ САМЫЙ ОПАСНЫЙ БЕГЛЕЦ ВСЕЛЕННОЙ');sfx('alert')};return;
+ }
  panel.innerHTML=`<div class="dialog-scene"><span class="eyebrow">ПЕРЕХВАТ КОМАНДНОГО КАНАЛА</span><h1>«ДОГОНЯЙ, ЕСЛИ СМОЖЕШЬ»</h1><p>Помощник «Я Кавказ» отключён. Ты расшифровываешь голосовое сообщение беглеца. Архитектор заявляет, что дело № 000 подделано, и предлагает проверить главный архив.</p><div class="terminal"><span>СИГНАЛ: ФЛАГМАН АРХИТЕКТОРА</span><span>ЦЕЛЬ В ЗОНЕ ПРЯМОГО КОНТАКТА</span><span class="warn">БОЕВАЯ ТРЕВОГА · БУДЬ ГОТОВ</span></div><button id="dialogNext">ПРОДОЛЖИТЬ ПОГОНЮ →</button></div>`;
  document.getElementById('dialogNext').onclick=()=>{state='play';panel.style.display='none';last=performance.now();announce('ЦЕЛЬ ВПЕРЕДИ: АРХИТЕКТОР БЕЗДНЫ',3);sfx('alert')};
 }
@@ -75,7 +82,7 @@ function setAbilityButton(btn,label,icon,cd,max){
 function updateAbilityButtons(){if(mode!=='story'||state!=='play')return;setAbilityButton(hideBtn,'ALT+TAB','⌨',story.hideCd,17);setAbilityButton(freezeBtn,'EXCEL','❄',story.freezeCd,20)}
 function showEndingChoice(){
  state='ending';document.body.classList.remove('in-combat');bombBtn.style.display='none';hideBtn.style.display='none';freezeBtn.style.display='none';pauseBtn.style.display='none';panel.style.display='block';
- caseCleared[3]=true;caseUnlocked=3;caseBest[3]=Math.max(caseBest[3]||0,score);persist();
+ caseCleared[3]=true;caseUnlocked=Math.max(caseUnlocked,4);caseBest[3]=Math.max(caseBest[3]||0,score);persist();
  const secret=story.reports>=story.need&&story.suspicion<=55&&story.caught===0;
  panel.innerHTML=`<div class="dialog-scene"><span class="eyebrow">КОСМИЧЕСКИЙ РОЗЫСК · ФИНАЛ</span><h1>ЦЕЛЬ ПЕРЕХВАЧЕНА</h1><p>Ты вывел из строя флагман Архитектора. Он признаёт, что самовольно покинул часть, но утверждает: приказ № 000 содержал ошибку, а его отлёт был попыткой сохранить доказательства.</p><div class="terminal"><span>УЛИКИ: ${story.reports} / ${story.need}</span><span>ВНИМАНИЕ ЦЕЛИ: ${Math.floor(story.suspicion)}%</span><span>ОБНАРУЖЕНИЙ: ${story.caught}</span></div><p>Как завершить дело группы розыска?</p><button id="takeChair">ЗАДЕРЖАТЬ И ДОСТАВИТЬ В ЧАСТЬ</button><button id="rejectOrder">ПРОВЕРИТЬ ПРИКАЗ № 000</button><button id="goHome" ${secret?'':'disabled'}>СЕКРЕТНО: ТИХО ЗАКРЫТЬ ДЕЛО ${secret?'':'🔒'}</button><p class="hint">${secret?'Секретный финал доступен.':'Для секретной развязки собери 3 улики и не поднимай тревогу выше 55% к финалу; не допускай обнаружений.'}</p></div>`;
  document.getElementById('takeChair').onclick=()=>completeEnding('chief');document.getElementById('rejectOrder').onclick=()=>completeEnding('loop');
@@ -85,6 +92,18 @@ function completeEnding(kind){
  if(!ENDING_IDS.includes(kind))return;if(!caseEndings.includes(kind))caseEndings.push(kind);persist();checkAchievements();state='ended';
  const choices={chief:['ЦЕЛЬ ЗАДЕРЖАНА','Ты доставляешь Архитектора в часть и передаёшь собранные материалы по делу № 000. Дальнейшую проверку проводят другие сотрудники. Тебе достаётся ещё три папки отчётов.'],loop:['ТАЙНА ПРИКАЗА № 000','Ты изучаешь найденные записи и обнаруживаешь сбой в штабном алгоритме. Архитектора доставляют для разбирательства, а дело пересматривают.'],escape:['ОПЕРАЦИЯ «ТИХИЙ ВОЗВРАТ»','Ты сохраняешь доказательства, убеждаешь Архитектора вернуться без космического преследования и закрываешь дежурство к 18:00.']};
  const [title,desc]=choices[kind];
- panel.innerHTML=`<div class="dialog-scene result win"><span class="eyebrow">ОПЕРАЦИЯ «НУЛЕВОЙ» ЗАВЕРШЕНА</span><h1>${title}</h1><p>${desc}</p><p>Концовок открыто: ${caseEndings.length}/3. Это вымышленная фантастическая история.</p><button id="endingMenu">К ДОСЬЕ РОЗЫСКА</button><button id="endingReplay" class="ghost">ПОВТОРИТЬ ФИНАЛ</button></div>`;
- document.getElementById('endingMenu').onclick=()=>menu('story');document.getElementById('endingReplay').onclick=()=>startCaseStage(3);
+ panel.innerHTML=`<div class="dialog-scene result win"><span class="eyebrow">ОПЕРАЦИЯ «НУЛЕВОЙ» ЗАВЕРШЕНА</span><h1>${title}</h1><p>${desc}</p><p>Концовок открыто: ${caseEndings.length}/3. Это вымышленная фантастическая история.</p><div class="terminal"><span class="warn">НОВОЕ ДЕЛО: «ПРИЗРАК САМОВОЛКИ»</span><span>Архитектор называет сообщника — Капитана Ухмылку.</span></div><button id="toPhantom">ОПЕРАЦИЯ 5: ПРИЗРАК САМОВОЛКИ →</button><button id="endingMenu">К ДОСЬЕ РОЗЫСКА</button><button id="endingReplay" class="ghost">ПОВТОРИТЬ ФИНАЛ</button></div>`;
+ document.getElementById('endingMenu').onclick=()=>menu('story');document.getElementById('endingReplay').onclick=()=>startCaseStage(3);document.getElementById('toPhantom').onclick=()=>startCaseStage(4);
+}
+
+// Финал 5-й операции: Капитан Ухмылка задержан.
+function showPhantomCaught(){
+ state='ended';document.body.classList.remove('in-combat');bombBtn.style.display='none';hideBtn.style.display='none';freezeBtn.style.display='none';pauseBtn.style.display='none';panel.style.display='block';
+ const op=CASE_OPERATIONS[4],flawless=story.caught===0,reward=op.reward+story.reports*60+(flawless?150:0);credits+=reward;runCredits+=reward;
+ caseCleared[4]=true;caseBest[4]=Math.max(caseBest[4]||0,score);persist();checkAchievements();
+ panel.innerHTML=`<div class="dialog-scene result win"><span class="eyebrow">ДЕЛО № 000 · ОПЕРАЦИЯ 5</span><h1>ПРИЗРАК ПОЙМАН</h1><div class="codex-boss phantom"><img src="assets/sprites/phantom_hull.png" alt=""></div><p>Маскировочное ядро «Цифра» изъято, крейсер «Невидимка» обездвижен. Капитана Ухмылку доставляют в часть. Он всё ещё улыбается и уверяет, что хлеб был очень нужен.</p>
+ <div class="result-grid"><div><b>${score.toLocaleString('ru-RU')}</b><span>ОЧКИ</span></div><div><b>${story.reports}/3</b><span>УЛИКИ</span></div><div><b>${kills}</b><span>СБИТО</span></div><div><b>+${reward}</b><span>КРЕДИТЫ ₡</span></div></div>
+ <div class="terminal"><span>ИЗЪЯТО: ${op.evidence}</span><span>СТАТУС ДЕЛА № 000: ЗАКРЫТО… ПОЧТИ</span><span>Это вымышленная фантастическая история.</span></div>${runSummaryHtml()}
+ <button id="phMenu">К ДОСЬЕ РОЗЫСКА</button><button id="phReplay" class="ghost">ПОВТОРИТЬ ОПЕРАЦИЮ</button></div>`;
+ document.getElementById('phMenu').onclick=()=>menu('story');document.getElementById('phReplay').onclick=()=>startCaseStage(4);
 }

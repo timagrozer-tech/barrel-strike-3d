@@ -3,7 +3,7 @@
 let state='splash',last=0,t=0,spawn=0,score=0,kills=0,phase=0,shake=0,inv=0,shots=[],foes=[],hostile=[],boss=null,player={x:270,y:820,hp:100,max:100,bombs:2},target={x:270,y:820},fire=0;
 let mini=null,miniIndex=0,miniCleared=false,storyMiniSpawned=false,paradeKills=0,announcement='',announceTimer=0,announceSub='',perkChoices=0,perkDamage=1,perkShield=0,perkSpeed=1,runSeed=0,graze=0,warning=null,hangarTab='ship',phaseSeen=1,combatStats={bossModules:0};
 let mode='story',droneCd=0,missileCd=0,wave=1,spawned=0,eliteKills=0,waveClock=0;
-let warnBanner=0,achTick=0,hazards=[],pickups=[],overcharge=0,combo=0,comboTimer=0,deathTimer=0,runCredits=0,sideGunCd=0,paradeRest=0;
+let decoys=[],warnBanner=0,achTick=0,hazards=[],pickups=[],overcharge=0,combo=0,comboTimer=0,deathTimer=0,runCredits=0,sideGunCd=0,paradeRest=0;
 const keys=new Set();
 
 // Эволюция корпуса: значения абсолютные для уровня, не суммируются.
@@ -84,11 +84,13 @@ function spawnMini(){
  foes=[];hostile=[];hazards=[];
  announce(mode==='story'?'ПОМОЩНИК БЕГЛЕЦА: '+type.name:type.name,3,type.attack);sfx('boss');vibrate(60);
 }
-function spawnBoss(){
+function spawnBoss(kind){
+ kind=kind||(mode==='story'&&caseCurrent().boss)||'architect';
+ if(kind==='phantom')return spawnPhantom();
  announce(mode==='story'?'ЦЕЛЬ РОЗЫСКА: АРХИТЕКТОР!':'АРХИТЕКТОР БЕЗДНЫ',4,'ФЛАГМАН · 4 ФАЗЫ · РАЗРУШАЕМЫЕ ТУРЕЛИ');sfx('boss');vibrate([80,40,80]);
  warnBanner=3;phase=1;foes=[];hostile=[];hazards=[];
  const hp=mode==='endless'?4200*(1+wave*.12):7200;
- boss={x:270,y:-260,ty:285,hp,max:hp,age:0,cd:1.4,laserCd:3.3,specialCd:4.5,escortCd:6,phase:1,wing:0,flash:0,spiral:0,
+ boss={kind:'architect',x:270,y:-260,ty:285,hp,max:hp,age:0,cd:1.4,laserCd:3.3,specialCd:4.5,escortCd:6,phase:1,wing:0,flash:0,spiral:0,
   modules:[{x:-92,y:50,hp:520,max:520,wingMount:false,side:-1},{x:92,y:50,hp:520,max:520,wingMount:false,side:1},{x:-236,y:44,hp:420,max:420,wingMount:true,side:-1},{x:240,y:44,hp:420,max:420,wingMount:true,side:1}]};
  phaseSeen=1;warning=null;
 }
@@ -105,9 +107,9 @@ function reset(){
  if(mode!=='endless')challengeActive=null;mods=challengeActive?{...MODS_DEFAULT(),...challengeActive.mods}:MODS_DEFAULT();runAchievements=[];stats.runs++;warnBanner=0;achTick=0;gameTimers.length=0;
  perkDamage=(contraband.overdrive?1.18:1)*(SHIPS[ship].dmg||1)*(mods.playerDmg||1);perkShield=0;perkSpeed=1;graze=0;warning=null;phaseSeen=1;combatStats={bossModules:0};audio.scene='';audio.step=0;audio.beat=0;runSeed=Math.floor(Math.random()*1e9);
  story=STORY_DEFAULT();caseBeacons=0;caseSpawnedMini=false;caseFinalFlag=false;if(contraband.jammer)story.suspicion=Math.max(0,story.suspicion-12);reports=[];storyAwards=0;
- hazards=[];pickups=[];overcharge=0;combo=0;comboTimer=0;deathTimer=0;runCredits=0;sideGunCd=0;paradeRest=0;
+ decoys=[];hazards=[];pickups=[];overcharge=0;combo=0;comboTimer=0;deathTimer=0;runCredits=0;sideGunCd=0;paradeRest=0;
  const mx=shipMaxHp();player={x:270,y:H-150,hp:mx,max:mx,bombs:mods.noBombs?0:2+(SHIPS[ship].bombs||0),bank:0,dead:false,shieldCd:0,bubble:0,magnet:0,revived:false};target={x:270,y:H-150};fire=0;wave=1;waveClock=0;spawned=0;droneCd=0;missileCd=0;
- setBackgroundTheme(mode==='story'?currentCaseStage:mode==='endless'?4:5);initStars();
+ setBackgroundTheme(mode==='story'?(currentCaseStage===4?6:currentCaseStage):mode==='endless'?4:5);initStars();
  panel.classList.remove('hangar','office-dialog');panel.style.display='none';document.body.classList.add('in-combat');
  bombBtn.style.display='flex';pauseBtn.style.display='flex';hideBtn.style.display=mode==='story'?'flex':'none';freezeBtn.style.display=mode==='story'?'flex':'none';updateBombButton();
  last=performance.now();
@@ -159,14 +161,14 @@ function update(dt){
  if(!boss&&!mini&&!player.dead){
   spawn-=dt;if(spawn<=0){if(mode!=='parade')spawnFoe();spawn=Math.max(.42,1.15-t*.009)*(mode==='endless'?Math.max(.6,1-wave*.03):1)/(mods.spawnRate||1)}
   if(mode==='story'&&t>8+caseBeacons*10&&caseBeacons<6&&story.reports<story.need){reports.push({x:clamp(player.x+rnd(-50,50),80,460),y:135,vy:96,life:14,spin:0});caseBeacons++;sfx('signal')}
-  if(mode==='story'&&!storyMiniSpawned&&t>(currentCaseStage===3?25:27)&&(story.reports>=story.need||t>53)){spawnMini();storyMiniSpawned=true}
-  if(mode==='story'&&currentCaseStage===3&&storyMiniSpawned&&miniCleared&&t>40&&!boss&&!caseFinalFlag){caseFinalFlag=true;spawnBoss()}
+  if(mode==='story'&&!storyMiniSpawned&&t>(caseCurrent().boss&&mode==='story'?25:27)&&(story.reports>=story.need||t>53)){spawnMini();storyMiniSpawned=true}
+  if(mode==='story'&&caseCurrent().boss&&storyMiniSpawned&&miniCleared&&t>40&&!boss&&!caseFinalFlag){caseFinalFlag=true;spawnBoss(caseCurrent().boss)}
   if(mode==='parade'){paradeRest-=dt;if(t>2.5&&paradeRest<=0&&paradeKills<MINI.length)spawnMini()}
-  if(mode==='endless'){waveClock+=dt;const next=Math.floor(waveClock/12)+1;if(next>wave){wave=next;sfx('upgrade');challengeWave(wave);announce('ВОЛНА '+wave,1.6,wave%10===0?'ФЛАГМАН ПРИБЛИЖАЕТСЯ':wave%5===0?'АНОМАЛИЯ НА РАДАРЕ':'');if(wave%10===0)spawnBoss();else if(wave%5===0)spawnMini();else if(wave%3===0)offerPerks()}}
+  if(mode==='endless'){waveClock+=dt;const next=Math.floor(waveClock/12)+1;if(next>wave){wave=next;sfx('upgrade');challengeWave(wave);announce('ВОЛНА '+wave,1.6,wave%10===0?'ФЛАГМАН ПРИБЛИЖАЕТСЯ':wave%5===0?'АНОМАЛИЯ НА РАДАРЕ':'');if(wave%10===0)spawnBoss(wave%20===0?'phantom':'architect');else if(wave%5===0)spawnMini();else if(wave%3===0)offerPerks()}}
  }
  updateFoes(dt,slowFoes);
  updateHazards(dt);
- if(boss)updateBoss(dt);
+ if(boss){if(boss.kind==='phantom')updatePhantom(dt);else updateBoss(dt)}
  if(mini)updateMini(dt);
  // Движение снарядов.
  const slowB=mode==='story'&&story.freeze>0?.3:1;
@@ -188,7 +190,7 @@ function update(dt){
  // Смерть мини-босса и босса.
  if(mini&&mini.hp<=0)defeatMini();
  if(state!=='play')return;
- if(boss&&boss.hp<=0){explosion(boss.x,boss.y,4,'#ffd064');for(let i=0;i<6;i++)explosion(boss.x+rnd(-200,200),boss.y+rnd(-80,120),1.5);sfx('explodeBig');addShake(20);vibrate([150,80,250]);score+=5000;boss=null;hazards=[];stats.bosses++;checkAchievements();
+ if(boss&&boss.hp<=0){const bk=boss.kind;decoys=[];explosion(boss.x,boss.y,4,bk==='phantom'?'#9dff5a':'#ffd064');for(let i=0;i<6;i++)explosion(boss.x+rnd(-200,200),boss.y+rnd(-80,120),1.5);sfx('explodeBig');addShake(20);vibrate([150,80,250]);score+=5000;boss=null;hazards=[];if(bk==='phantom')stats.phantoms++;else stats.bosses++;checkAchievements();
   if(mode==='story'){end(true);return}else{credits+=300+wave*20;runCredits+=300+wave*20;persist();hostile=[];sfx('win')}}
  shots=shots.filter(b=>b.y>-30&&b.y<H+30&&b.x>-30&&b.x<W+30&&!b.hit);
  hostile=hostile.filter(b=>b.y>-40&&b.y<H+40&&b.x>-40&&b.x<W+40);
@@ -305,10 +307,11 @@ function collideShots(){
   for(const f of foes){if(f===b.last)continue;const r=FOE[f.type].r+b.r;if(Math.abs(b.x-f.x)<r&&Math.abs(b.y-f.y)<r&&Math.hypot(b.x-f.x,b.y-f.y)<r){f.hp-=b.dmg;f.flash=.08;burst(b.x,b.y,'#ffaa44',2,90,.25);if(b.pierce>0){b.pierce--;b.last=f}else b.hit=true;break}}
   if(b.hit)continue;
   if(mini&&mini.y>0&&Math.hypot(b.x-mini.x,(b.y-mini.y)*1.15)<mini.size*.36+b.r){mini.hp-=b.dmg;mini.flash=.06;b.hit=true;if(Math.random()<.3)burst(b.x,b.y,mini.color,2,90,.25);continue}
+  if(decoys.length){const d=decoys.find(d=>Math.hypot(b.x-d.x,(b.y-d.y)*1.6)<110);if(d){d.hp-=b.dmg;d.flash=.06;b.hit=true;if(d.hp<=0){explosion(d.x,d.y,1.4,'#9dff5a');popText(d.x,d.y,'ЛОЖНАЯ ЦЕЛЬ','#9dff5a',15);score+=300;decoys=decoys.filter(x=>x!==d)}continue}}
   if(boss&&boss.y>0){
    const m=boss.modules.find(m=>{if(m.hp<=0||(m.wingMount&&boss.phase<3))return false;const p=modulePos(m);return Math.hypot(b.x-p.x,b.y-p.y)<30});
    if(m){m.hp-=b.dmg;m.flash=.08;b.hit=true;if(m.hp<=0){const mp=modulePos(m);explosion(mp.x,mp.y,1.4);score+=250;combatStats.bossModules++;sfx('module');addShake(6);popText(boss.x+m.x,boss.y+m.y-30,'ТУРЕЛЬ +250','#ffd27a')}continue}
-   const dx=(b.x-boss.x)/250,dy=(b.y-(boss.y+10))/105;if(dx*dx+dy*dy<1){boss.hp-=b.dmg;boss.flash=.05;b.hit=true;if(Math.random()<.18)burst(b.x,b.y,'#ff5b62',3,120,.3)}
+   const ph=boss.kind==='phantom',dx=(b.x-boss.x)/(ph?210:250),dy=(b.y-(boss.y+10))/(ph?105:105);if(dx*dx+dy*dy<1){boss.hp-=b.dmg*(ph&&boss.cloak>0?.4:1);boss.flash=.05;b.hit=true;if(Math.random()<.18)burst(b.x,b.y,'#ff5b62',3,120,.3)}
   }
  }
 }
@@ -369,7 +372,7 @@ function defeatMini(){
  if(!minisDefeated.includes(m.kind))minisDefeated.push(m.kind);stats.minis++;if(!m.hitTaken){stats.flawlessMini++;popText(m.x,m.y+40,'БЕЗ УРОНА!','#9fffd9',16)}
  score+=1200;credits+=120;runCredits+=120;persist();checkAchievements();mini=null;hostile=[];hazards=[];miniCleared=true;paradeKills++;sfx('win');popText(m.x,m.y,'+1200','#ffe28a',22);
  foes=foes.filter(f=>f.type!=='duckling');
- if(mode==='story'){if(currentCaseStage<3){finishCaseStage();return}else if(!story.interlude)showInterlude()}
+ if(mode==='story'){if(!caseCurrent().boss){finishCaseStage();return}else if(!story.interlude)showInterlude()}
  if(mode==='parade'){paradeBest=Math.max(paradeBest,paradeKills);persist();if(paradeKills>=MINI.length){paradeCleared=true;end(true);return}player.hp=Math.min(player.max,player.hp+20);paradeRest=2.5;announce('СЛЕДУЮЩИЙ: '+MINI[paradeKills].name,2.2,'ПАРАД ДЕБИЛОВ '+paradeKills+'/'+MINI.length+' · РЕМОНТ +20')}
 }
 
@@ -416,7 +419,7 @@ function end(win){
  sfx(win?'win':'lose');const reward=Math.floor(score/10)+(win?400:0);credits+=reward;runCredits+=reward;bestScore=Math.max(bestScore,score);
  if(mode==='endless')abyssBestWave=Math.max(abyssBestWave,wave);
  const xpGain=Math.floor(score/25)+kills+(win?150:0),rankBefore=rankIndex();persist();checkAchievements();addXp(xpGain);lastRunSummary={xpGain,rankBefore};
- if(win&&mode==='story'){showEndingChoice();return}
+ if(win&&mode==='story'){if(caseCurrent().boss==='phantom')showPhantomCaught();else showEndingChoice();return}
  state=win?'win':'lose';panel.style.display='block';panel.classList.remove('hangar');
  const title=win?(mode==='parade'?'ПАРАД ОКОНЧЕН':'ПОБЕДА'):'КОРАБЛЬ УНИЧТОЖЕН';
  const sub=win?(mode==='parade'?'Все восемь аномалий повержены.':'Архитектор Бездны отступил.'):mode==='story'?'Розыскная операция прервана. Координаты цели сохранены.':'Конклав захватил сектор.';
@@ -443,3 +446,37 @@ function offerPerks(){
  document.querySelector('#perk3').onclick=()=>{perkSpeed=Math.min(2,perkSpeed*1.15);resumePerk()};
 }
 function resumePerk(){sfx('upgrade');state='play';panel.style.display='none';last=performance.now()}
+
+/* ---------- Капитан Ухмылка (второй босс): стелс-крейсер «Невидимка», 3 фазы ---------- */
+function spawnPhantom(){
+ warnBanner=3;phase=1;foes=[];hostile=[];hazards=[];decoys=[];
+ announce('КАПИТАН УХМЫЛКА',4,'ВТОРОЙ САМЫЙ ОПАСНЫЙ БЕГЛЕЦ · МАСКИРОВКА «ЦИФРА»');sfx('boss');vibrate([80,40,80]);
+ const hp=mode==='endless'?3800*(1+wave*.12):6800;
+ boss={kind:'phantom',x:270,baseX:270,y:-260,ty:315,hp,max:hp,age:0,cd:1.6,phase:1,flash:0,cloak:0,cloakCd:5,blinkCd:7,decoyCd:2,beamCd:4,rainCd:6,tele:null,wing:0,
+  modules:[{x:-187,y:13,hp:480,max:480,wingMount:false,side:-1},{x:187,y:13,hp:480,max:480,wingMount:false,side:1}]};
+ phaseSeen=1;
+}
+function updatePhantom(dt){
+ const b=boss;b.age+=dt;b.flash=Math.max(0,b.flash-dt);for(const m of b.modules)m.flash=Math.max(0,(m.flash||0)-dt);
+ if(b.y<b.ty){b.y=Math.min(b.ty,b.y+120*dt);return}
+ const p=b.hp/b.max,bp=p>.66?1:p>.33?2:3;
+ if(bp!==b.phase){b.phase=bp;phaseSeen=bp;const names=['','','ЛОЖНЫЕ ОРИЕНТИРОВКИ','УХМЫЛКА'];announce('КАПИТАН УХМЫЛКА · ФАЗА '+bp,2.4,names[bp]);sfx('phase');addShake(10);vibrate(90);explosion(b.x,b.y,1.8,'#9dff5a');hostile=[];b.decoyCd=.5}
+ b.cloak=Math.max(0,b.cloak-dt);b.cloakCd-=dt;b.cd-=dt;b.blinkCd-=dt;b.decoyCd-=dt;b.beamCd-=dt;b.rainCd-=dt;
+ // Телепорт: мерцание в точке назначения, затем прыжок.
+ if(b.tele){b.tele.t-=dt;if(b.tele.t<=0){burst(b.x,b.y,'#9dff5a',26,220,.6);b.baseX=b.tele.x;b.tele=null;sfx('freeze');burst(b.baseX,b.y,'#9dff5a',26,220,.6)}}
+ b.x=b.baseX+Math.sin(b.age*.9)*(b.phase===3?55:70);
+ if(player.dead)return;
+ if(b.cloakCd<=0){b.cloak=b.phase===3?3:2.4;b.cloakCd=b.phase===1?7:5.5;sfx('hide');announce('МАСКИРОВКА «ЦИФРА»',1.2,'УРОН ПО ЦЕЛИ СНИЖЕН')}
+ if(b.phase>=2&&b.blinkCd<=0&&!b.tele){b.tele={x:clamp(player.x+rnd(-120,120),150,390),t:.8};b.blinkCd=b.phase===3?5:7}
+ if(b.phase>=2&&b.decoyCd<=0&&decoys.length===0){for(const s of [-1,1])decoys.push({x:clamp(b.baseX+s*rnd(130,170),90,450),y:b.y+rnd(-20,40),hp:380,max:380,age:rnd(0,3),cd:rnd(1,2),flash:0});b.decoyCd=b.phase===3?7:10;sfx('signal')}
+ for(const d of decoys){d.age+=dt;d.flash=Math.max(0,d.flash-dt);d.x+=Math.sin(d.age*1.4)*40*dt;d.cd-=dt;if(d.cd<=0){const a=Math.atan2(player.y-d.y,player.x-d.x);for(let k=-1;k<=1;k++)enemyShot(d.x,d.y+60,a+k*.2,200,6,11,'pixel','#9dff5a');d.cd=2.2}}
+ if(b.cd<=0){
+  const a=Math.atan2(player.y-(b.y+60),player.x-b.x),n=b.phase===1?7:b.phase===2?9:11;
+  for(let i=0;i<n;i++)enemyShot(b.x,b.y+70,a+(i-(n-1)/2)*.15,230,6,13,'pixel','#9dff5a');
+  for(const m of b.modules.filter(m=>m.hp>0)){const mp=modulePos(m),aa=Math.atan2(player.y-mp.y,player.x-mp.x);for(let k=0;k<2;k++)setTimeoutGame(()=>{if(boss&&m.hp>0)enemyShot(mp.x,mp.y+20,aa,270,5,13,'pixel','#c8ff7a')},k*.15)}
+  if(b.phase>=2){const n2=16;for(let i=0;i<n2;i++)enemyShot(b.x,b.y+20,i/n2*TAU+b.age,150,6,12,'pixel','#7dd85a')}
+  b.cd=b.phase===1?1.5:b.phase===2?1.25:.95;
+ }
+ if(b.phase===3&&b.beamCd<=0){const xs=[player.x,clamp(player.x-150,40,500),clamp(player.x+150,40,500)];for(const x of xs)addHazard({type:'beamV',x,w:48,warn:1.1,active:.7,dmg:22,color:'#9dff5a',label:'УХМЫЛКА',y0:b.y+110});b.beamCd=4.2;sfx('charge')}
+ if(b.phase>=2&&b.rainCd<=0){for(let i=0;i<(b.phase===3?4:3);i++)addHazard({type:'beamV',x:i===0?player.x:rnd(40,500),w:54,warn:1.2,active:.9,dmg:16,color:'#7dd85a',label:'ПИКСЕЛИ',rain:'pixel',y0:b.y+110});b.rainCd=b.phase===3?6:8}
+}

@@ -1,5 +1,5 @@
 /* VOID FRONTIER — service worker (генерируется tools/gen_sw.py). Версия кеша меняется при любом изменении файлов. */
-const CACHE='void-frontier-v2.0-0afb015b41';
+const CACHE='void-frontier-v2.0-f021e48c4b';
 const ASSETS=[
  './',
  './assets/architect.jpg',
@@ -19,6 +19,10 @@ const ASSETS=[
  './assets/sprites/mini_flower.png',
  './assets/sprites/mini_mountain.png',
  './assets/sprites/mini_slipper.png',
+ './assets/sprites/phantom_glow.png',
+ './assets/sprites/phantom_hull.png',
+ './assets/sprites/phantom_wing_l.png',
+ './assets/sprites/phantom_wing_r.png',
  './assets/sprites/player_lvl1.png',
  './assets/sprites/player_lvl2.png',
  './assets/sprites/player_lvl3.png',

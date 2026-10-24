@@ -7,12 +7,12 @@ const SHIP_IDS=['astra','titan','specter','valkyrie','bastion','hive','nova','ar
 let credits=0,weapon='laser',weaponLevel=1,ship='astra',shipUnlocked=false,drones=0,missiles=0,bestScore=0;
 let officeBest=0,officeCleared=false,lowerMarketKnown=false,marketVisits=0,marketRaids=0;
 let contraband={overdrive:false,armor:false,jammer:false,blackMissiles:false,shadowDrones:false,phaseShield:false};
-let caseUnlocked=0,caseCleared=[false,false,false,false],caseBest=[0,0,0,0],caseEndings=[],storyEndings=[];
+let caseUnlocked=0,caseCleared=[false,false,false,false,false],caseBest=[0,0,0,0,0],caseEndings=[],storyEndings=[];
 // Новое в 2.0
 let hullLevel=1,abyssBestWave=0,paradeBest=0,paradeCleared=false,totalKills=0,profileCreated=0;
 // Новое в 2.1: корабли, достижения, звания, ежедневные награды, статистика
 let ownedShips=['astra','titan'],achievements=[],pilotXp=0,dailyStreak=0,dailyLast='',challengeDone='',minisDefeated=[];
-const STATS_DEFAULT=()=>({kills:0,elites:0,minis:0,bosses:0,graze:0,bombs:0,runs:0,deaths:0,bestCombo:0,earned:0,pickups:0,flawlessMini:0,bestRunGraze:0,playTime:0,challenges:0});
+const STATS_DEFAULT=()=>({kills:0,elites:0,minis:0,bosses:0,graze:0,bombs:0,runs:0,deaths:0,bestCombo:0,earned:0,pickups:0,flawlessMini:0,bestRunGraze:0,playTime:0,challenges:0,phantoms:0});
 let stats=STATS_DEFAULT(),lastCreditsSeen=0;
 const CONTRABAND_KEYS=['overdrive','armor','jammer','blackMissiles','shadowDrones','phaseShield'];
 const ENDING_IDS=['escape','chief','loop'];
@@ -32,9 +32,9 @@ function migrateSave(raw){
   bestScore:Math.floor(num(s.bestScore,0,1e10)),officeBest:num(s.officeBest,0,1e6),officeCleared:!!s.officeCleared,
   lowerMarketKnown:!!s.lowerMarketKnown,marketVisits:Math.floor(num(s.marketVisits,0,1e6)),marketRaids:Math.floor(num(s.marketRaids,0,1e6)),
   contraband:Object.fromEntries(CONTRABAND_KEYS.map(k=>[k,!!(s.contraband&&s.contraband[k])])),
-  caseUnlocked:Math.floor(num(s.caseUnlocked,0,3)),
-  caseCleared:[0,1,2,3].map(i=>!!(Array.isArray(s.caseCleared)&&s.caseCleared[i])),
-  caseBest:[0,1,2,3].map(i=>Math.floor(num(Array.isArray(s.caseBest)?s.caseBest[i]:0,0,1e10))),
+  caseUnlocked:Math.floor(num(s.caseUnlocked,0,4)),
+  caseCleared:[0,1,2,3,4].map(i=>!!(Array.isArray(s.caseCleared)&&s.caseCleared[i])),
+  caseBest:[0,1,2,3,4].map(i=>Math.floor(num(Array.isArray(s.caseBest)?s.caseBest[i]:0,0,1e10))),
   caseEndings:Array.isArray(s.caseEndings)?[...new Set(s.caseEndings.filter(e=>ENDING_IDS.includes(e)))]:[],
   storyEndings:Array.isArray(s.storyEndings)?[...new Set(s.storyEndings.filter(e=>ENDING_IDS.includes(e)))]:[],
   musicOn:s.musicOn!==false,soundOn:s.soundOn!==false,
@@ -47,6 +47,7 @@ function migrateSave(raw){
  if(Array.isArray(s.ownedShips))s.ownedShips.forEach(id=>{if(SHIP_IDS.includes(id))owned.add(id)});
  out.ownedShips=SHIP_IDS.filter(id=>owned.has(id));out.shipUnlocked=owned.has('specter');
  if(!owned.has(out.ship))out.ship='astra';
+ if(out.caseEndings.length&&out.caseUnlocked<4)out.caseUnlocked=4;
  out.achievements=Array.isArray(s.achievements)?[...new Set(s.achievements.filter(x=>typeof x==='string'))]:[];
  out.pilotXp=Math.floor(num(s.pilotXp,0,1e9));out.dailyStreak=Math.floor(num(s.dailyStreak,0,7));
  out.dailyLast=typeof s.dailyLast==='string'?s.dailyLast.slice(0,10):'';out.challengeDone=typeof s.challengeDone==='string'?s.challengeDone.slice(0,10):'';

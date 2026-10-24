@@ -40,14 +40,14 @@ function frame(now){
  requestAnimationFrame(frame);
 }
 function refreshMainMenu(){
- const el=document.getElementById('menuStats');if(el)el.innerHTML=`<div><b>${caseCleared.filter(Boolean).length}/4</b><span>ДЕЛ ЗАКРЫТО</span></div><div><b>${fmt(credits)}</b><span>КРЕДИТЫ ₡</span></div><div><b>${hullLevel}/5</b><span>КОРПУС</span></div>`;
+ const el=document.getElementById('menuStats');if(el)el.innerHTML=`<div><b>${caseCleared.filter(Boolean).length}/${CASE_OPERATIONS.length}</b><span>ДЕЛ ЗАКРЫТО</span></div><div><b>${fmt(credits)}</b><span>КРЕДИТЫ ₡</span></div><div><b>${hullLevel}/5</b><span>КОРПУС</span></div>`;
  const img=document.getElementById('menuShip');if(img)img.src='assets/sprites/player_lvl'+Math.max(3,hullLevel)+'.png';
- const cont=document.getElementById('continue');if(cont)cont.textContent=caseCleared.some(Boolean)||caseUnlocked>0?'ПРОДОЛЖИТЬ РОЗЫСК · ОПЕРАЦИЯ '+(Math.min(caseUnlocked,3)+1):'НАЧАТЬ РОЗЫСК · ОПЕРАЦИЯ 1';
+ const cont=document.getElementById('continue');if(cont)cont.textContent=caseCleared.some(Boolean)||caseUnlocked>0?'ПРОДОЛЖИТЬ РОЗЫСК · ОПЕРАЦИЯ '+(Math.min(caseUnlocked,LAST_OP)+1):'НАЧАТЬ РОЗЫСК · ОПЕРАЦИЯ 1';
 }
 function boot(){
  loadSave();applyQuality();applyVolumes();applyButtonSize();setBackgroundTheme(0);initStars();refreshMainMenu();
  document.getElementById('start').onclick=()=>{initAudio();sfx('click');menu('ship')};
- document.getElementById('continue').onclick=()=>{initAudio();startCaseStage(Math.min(caseUnlocked,3))};
+ document.getElementById('continue').onclick=()=>{initAudio();startCaseStage(Math.min(caseUnlocked,LAST_OP))};
  const ver=document.querySelector('.menu-version');if(ver)ver.textContent='ВЕРСИЯ '+VF_VERSION;
  // Кнопка «Назад» Android в APK (Capacitor App plugin, если доступен).
  const App=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;

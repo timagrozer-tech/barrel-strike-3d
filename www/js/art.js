@@ -6,7 +6,8 @@ const SPRITE_FILES={
  player1:'player_lvl1',player2:'player_lvl2',player3:'player_lvl3',player4:'player_lvl4',player5:'player_lvl5',
  scout:'enemy_scout',zig:'enemy_zig',heavy:'enemy_heavy',sniper:'enemy_sniper',carrier:'enemy_carrier',bomber:'enemy_bomber',drone:'enemy_drone',
  duck:'mini_duck',flower:'mini_flower',slipper:'mini_slipper',mountain:'mini_mountain',duckling:'duckling',
- archHull:'arch_hull',archWingL:'arch_wing_l',archWingR:'arch_wing_r',archGlow:'arch_glow'
+ archHull:'arch_hull',archWingL:'arch_wing_l',archWingR:'arch_wing_r',archGlow:'arch_glow',
+ phHull:'phantom_hull',phWingL:'phantom_wing_l',phWingR:'phantom_wing_r',phGlow:'phantom_glow'
 };
 const IMG={};let assetsLoaded=0,assetsTotal=0;
 function loadImage(src){const img=new Image();assetsTotal++;img.onload=()=>{assetsLoaded++;img.ok=true};img.onerror=()=>{assetsLoaded++;img.failed=true;console.warn('Не загружен ресурс',src)};img.decoding='async';img.src=src;return img}
@@ -52,6 +53,7 @@ function bulletTex(kind,color,r){
   x.shadowColor=color;x.shadowBlur=r*1.6;x.fillStyle=color;x.beginPath();x.roundRect(w/2-r*.75,r*.8,r*1.5,h-r*1.6,r);x.fill();x.shadowBlur=0;x.fillStyle='#f2ffff';x.beginPath();x.roundRect(w/2-r*.32,r*1.4,r*.64,h-r*2.8,r);x.fill()}
  else if(kind==='plasma'){w=h=r*4;cv=makeCanvas(w*RF,h*RF);x=cv.getContext('2d');x.scale(RF,RF);
   const gr=x.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);gr.addColorStop(0,'#ffffff');gr.addColorStop(.22,'#c8fff4');gr.addColorStop(.42,color);gr.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gr;x.fillRect(0,0,w,h)}
+ else if(kind==='pixel'){w=h=r*3.6;cv=makeCanvas(w*RF,h*RF);x=cv.getContext('2d');x.scale(RF,RF);const c0=w/2;x.shadowColor=color;x.shadowBlur=r*1.4;x.fillStyle=color;x.fillRect(c0-r,c0-r,r*2,r*2);x.shadowBlur=0;x.fillStyle='rgba(255,255,255,.95)';x.fillRect(c0-r*.45,c0-r*.45,r*.9,r*.9);x.strokeStyle='rgba(20,40,10,.8)';x.lineWidth=1;x.strokeRect(c0-r,c0-r,r*2,r*2)}
  else if(kind==='needle'){w=r*3;h=r*10;cv=makeCanvas(w*RF,h*RF);x=cv.getContext('2d');x.scale(RF,RF);
   x.shadowColor=color;x.shadowBlur=r*1.5;x.fillStyle=color;x.beginPath();x.moveTo(w/2,r*.5);x.lineTo(w/2+r*.7,h*.6);x.lineTo(w/2,h-r*.5);x.lineTo(w/2-r*.7,h*.6);x.closePath();x.fill();x.shadowBlur=0;x.fillStyle='#fff';x.fillRect(w/2-r*.18,r*1.5,r*.36,h*.5)}
  else {// orb
@@ -107,7 +109,8 @@ const SECTOR_THEMES=[
  {name:'kpp7',a:'#a8682a',b:'#4b3a2a',c:'#140f12',planet:'#d79a52',ring:true},
  {name:'abyss',a:'#a51c3c',b:'#3a0f3e',c:'#08040f',planet:'#7a2135',ring:false},
  {name:'endless',a:'#3a3ec0',b:'#1a5a8a',c:'#050a1e',planet:'#6f7bff',ring:true},
- {name:'parade',a:'#1d9a7a',b:'#3a5a1a',c:'#04140f',planet:'#8ee06a',ring:false}
+ {name:'parade',a:'#1d9a7a',b:'#3a5a1a',c:'#04140f',planet:'#8ee06a',ring:false},
+ {name:'cifra',a:'#3f8a3a',b:'#2d4a24',c:'#040c06',planet:'#9bd06a',ring:true}
 ];
 const BG={cache:new Map(),y:0,stars:[],theme:SECTOR_THEMES[0],planetY:-300,planetX:400};
 function seeded(seed){let s=seed>>>0||1;return ()=>(s=(s*1664525+1013904223)>>>0)/4294967296}

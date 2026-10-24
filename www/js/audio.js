@@ -94,6 +94,9 @@ const MUSIC={
  architect2:{beat:.14,cat:'musicBoss',bass:[41.2,49,61.74,55,36.71,46.25,55,61.74],lead:[164.8,196,246.9,0,220,0,146.8,185,0,220,0,246.9,0,0,0,0],drum:'x.h.s.h.x.xhs.h.'},
  architect3:{beat:.12,cat:'musicBoss',bass:[41.2,41.2,55,41.2,58.27,41.2,61.74,65.41],lead:[329.6,0,392,0,466.2,0,440,392,0,329.6,0,493.9,0,0,0,0],drum:'x.hsx.hsx.hsxshs'},
  architect4:{beat:.1,cat:'musicBoss',bass:[41.2,41.2,43.65,41.2,49,41.2,51.91,55],lead:[659.3,0,622.3,659.3,0,493.9,0,523.3,0,587.3,0,659.3,698.5,0,0,0],drum:'xhsxxhsxxhsxxsss'},
+ phantom1:{beat:.15,cat:'musicBoss',bass:[49,0,49,58.27,0,49,65.41,55],lead:[196,0,0,233.1,196,0,0,174.6,0,196,0,261.6,0,233.1,0,0],drum:'x..hs.h.x.h.s.hh'},
+ phantom2:{beat:.13,cat:'musicBoss',bass:[49,49,58.27,49,65.41,49,73.42,58.27],lead:[392,0,349.2,392,0,466.2,0,392,0,523.3,0,466.2,392,0,0,0],drum:'x.hsx.hsxxhs.hsh'},
+ phantom3:{beat:.11,cat:'musicBoss',bass:[49,49,51.91,49,58.27,49,61.74,65.41],lead:[784,0,698.5,784,0,932.3,0,784,0,1046.5,0,932.3,784,0,0,0],drum:'xhsxxhsxxhsxxsss'},
  sneak:{beat:.26,cat:'musicBase',bass:[73.42,0,87.31,0,65.41,0,82.41,0],lead:[293.7,0,0,349.2,0,0,261.6,0,0,329.6,0,0,0,0,0,0],drum:'..h...h...h...hs'},
  market:{beat:.22,cat:'musicBase',bass:[65.41,98,65.41,73.42,110,73.42,61.74,92.5],lead:[261.6,0,311.1,0,0,392,0,349.2,0,311.1,0,261.6,0,0,0,0],drum:'x.h.s.hhx.h.s.h.'}
 };
@@ -109,7 +112,7 @@ function musicDrum(kind,when,cat){
 }
 function currentMusicScene(){
  if(state==='market')return 'market';if(state==='office')return 'sneak';
- if(typeof boss!=='undefined'&&boss)return 'architect'+(boss.phase||1);
+ if(typeof boss!=='undefined'&&boss)return (boss.kind==='phantom'?'phantom':'architect')+(boss.phase||1);
  if(typeof mini!=='undefined'&&mini)return mini.phase2?'anomaly2':'anomaly';
  if(mode==='story')return story.suspicion>70?'alert':'pursuit';
  return 'combat';
@@ -120,7 +123,7 @@ function musicTick(dt){
  audio.beat-=dt;if(audio.beat>0)return;
  const m=MUSIC[scene],cat=settings[m.cat]??1;audio.beat+=m.beat;if(audio.beat<-.3)audio.beat=0;
  const step=audio.step++,when=audio.ctx.currentTime+.03;
- const lead=m.lead[step%16];if(lead)musicNote(lead,scene.startsWith('architect')?'sawtooth':'triangle',scene.startsWith('architect')?.11:.17,m.beat*1.6,when,cat);
+ const lead=m.lead[step%16];if(lead)musicNote(lead,scene.startsWith('architect')?'sawtooth':scene.startsWith('phantom')?'square':'triangle',scene.startsWith('architect')||scene.startsWith('phantom')?.1:.17,m.beat*1.6,when,cat);
  if(step%2===0){const b=m.bass[(step/2|0)%8];if(b)musicNote(b,'sawtooth',.2,m.beat*1.8,when,cat);if(b)musicNote(b/2,'sine',.32,m.beat*2,when,cat)}
  const d=m.drum[step%16];if(d&&d!=='.')musicDrum(d,when,cat);
  if(scene.startsWith('architect')&&step%16===0)musicNote(m.bass[0]*2,'triangle',.16,m.beat*12,when,cat);

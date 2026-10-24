@@ -19,7 +19,7 @@ function menu(tab=hangarTab){
  const rp=rankProgress(),titles={settings:'НАСТРОЙКИ',codex:'КОДЕКС',shop:'ВЕРФЬ И МАГАЗИН',rewards:'НАГРАДЫ И ДОСТИЖЕНИЯ'};
  const rewardDot=dailyAvailable()||(!challengeDoneToday());
  panel.innerHTML=`<header class="hangar-header"><div class="hh-top"><div class="rank-chip"><b>🎖 ${RANKS[rp.i][0]}</b><div class="xpbar"><i style="width:${Math.round(rp.k*100)}%"></i></div></div><div class="hh-icons"><button class="icon-btn ${tab==='codex'?'chosen':''}" data-tab="codex" aria-label="Кодекс">📖</button><button class="icon-btn ${tab==='settings'?'chosen':''}" data-tab="settings" aria-label="Настройки">⚙</button></div></div>
- <h1>${titles[tab]||'КОСМИЧЕСКИЙ АНГАР'}</h1><div class="currency"><span>◈ ${fmt(credits)} ₡</span><span>★ ${fmt(bestScore)}</span><span>🏆 ${achievements.length}/${ACH.length}</span><span>⚑ ${caseCleared.filter(Boolean).length}/4</span></div></header>
+ <h1>${titles[tab]||'КОСМИЧЕСКИЙ АНГАР'}</h1><div class="currency"><span>◈ ${fmt(credits)} ₡</span><span>★ ${fmt(bestScore)}</span><span>🏆 ${achievements.length}/${ACH.length}</span><span>⚑ ${caseCleared.filter(Boolean).length}/${CASE_OPERATIONS.length}</span></div></header>
  <nav class="hangar-nav">${tabs.map(([id,ic,l])=>`<button data-tab="${id}" class="${tab===id?'chosen':''}"><i>${ic}</i>${l}${id==='rewards'&&rewardDot?'<em class="dot"></em>':''}</button>`).join('')}</nav>
  <section class="hangar-content">${bodies[tab]()}</section>
  <footer class="deploy"><button id="deployBtn" class="deploy-main">В БОЙ ▶</button></footer><p id="hangar-toast" role="status" aria-live="polite" class="toast"></p>`;
@@ -136,7 +136,8 @@ function bindRewardsTab(){
 function codexTab(){
  const enemies=[['scout','РАЗВЕДЧИК','Быстрый, прицельные одиночные выстрелы'],['zig','ПЕРЕХВАТЧИК','Манёвры зигзагом, очереди по 3'],['heavy','ШТУРМОВИК','Медленный и бронированный, веер вперёд'],['sniper','СНАЙПЕР','Зависает и прицеливается — следи за лучом'],['carrier','НОСИТЕЛЬ ДРОНОВ','Выпускает рой самонаводящихся дронов'],['bomber','БОМБАРДИРОВЩИК','Плазменные бомбы взрываются кольцом']];
  const items=[{k:'overdrive',n:'⚡ Реактор +18% урона'},{k:'armor',n:'🛡 Броня +25 HP'},{k:'jammer',n:'📡 Глушилка подозрения'},{k:'blackMissiles',n:'🚀 Чёрные ракеты'},{k:'shadowDrones',n:'🛰 Теневой дрон'},{k:'phaseShield',n:'🔮 Фазовый щит'}];
- return `<div class="codex"><div class="codex-boss"><img src="assets/sprites/arch_hull.png" alt=""></div><h2>АРХИТЕКТОР БЕЗДНЫ</h2><p>Вымышленная цель группы розыска СОЧ на секретном флагмане. Флагман меняет свет и форму по фазам: залпы и гравитационные кольца → турели → лучи Бездны и раскрытие щитов → абсолютный залп.</p>
+ return `<div class="codex"><div class="codex-boss"><img src="assets/sprites/arch_hull.png" alt=""></div><h2>АРХИТЕКТОР БЕЗДНЫ · ЦЕЛЬ № 1</h2><p>Вымышленная цель группы розыска СОЧ на секретном флагмане. Флагман меняет свет и форму по фазам: залпы и гравитационные кольца → турели → лучи Бездны и раскрытие щитов → абсолютный залп.</p>
+ <div class="codex-boss phantom"><img src="assets/sprites/phantom_hull.png" alt=""></div><h2>КАПИТАН УХМЫЛКА · ЦЕЛЬ № 2</h2><p>Он же Призрак Самоволки — второй самый опасный беглец во вселенной, бывший штурман Архитектора. Украл маскировочное ядро «Цифра», летает на стелс-крейсере «Невидимка» и всегда улыбается на ориентировках. Любимая фраза: «Я просто вышел за хлебом». Три фазы: маскировка → ложные цели и телепорт → лучи «Ухмылки» и пиксельный дождь. ${caseCleared[4]?'<b>СТАТУС: ЗАДЕРЖАН ✓</b>':caseUnlocked>=4?'<b>СТАТУС: В РОЗЫСКЕ</b>':'<b>СТАТУС: ДАННЫЕ ЗАСЕКРЕЧЕНЫ</b>'}</p>
  <h2>АНОМАЛЬНЫЕ МИНИ-БОССЫ</h2><div class="codex-list">${MINI.map((m,i)=>`<div class="codex-row"><img src="${miniThumb(m.kind)}" alt=""><div><b>${String(i+1).padStart(2,'0')} · ${m.name}</b><small>${m.attack} · ${m.special}</small></div></div>`).join('')}</div>
  <h2>ПРОТИВНИКИ</h2><div class="codex-list">${enemies.map(([k,n,d])=>`<div class="codex-row"><img src="assets/sprites/${SPRITE_FILES[k]}.png" alt=""><div><b>${n}</b><small>${d}</small></div></div>`).join('')}</div>
  <h2>НИЖНИЙ РЫНОК</h2><p>Вход только через нижнее КПП: начни миссию в архиве штаба, обойди сканеры в правом нижнем коридоре и найди фиолетовую дверь.</p><div class="story-objective">🕳 ПОСЕЩЕНИЙ: ${marketVisits} · 🚨 ОБЛАВ: ${marketRaids}</div>
@@ -179,10 +180,10 @@ function applyButtonSize(){document.documentElement.dataset.btn=settings.buttons
 /* ---------- Выбор режима ---------- */
 function showModeSelect(){
  state='modes';panel.className='hangar modes';panel.style.display='flex';hideCombatButtons();
- const next=Math.min(caseUnlocked,3),op=CASE_OPERATIONS[next];
+ const next=Math.min(caseUnlocked,LAST_OP),op=CASE_OPERATIONS[next];
  panel.innerHTML=`<header class="hangar-header"><div class="hh-top"><span class="eyebrow">ВЫБОР ВЫЛЕТА</span><button class="icon-btn" id="modesBack" aria-label="Назад">✕</button></div><h1>КУДА ЛЕТИМ?</h1></header>
  <section class="hangar-content mode-list">
-  <button class="mode-card primary" id="mCampaign"><i>🚀</i><div><b>РОЗЫСК СОЧ · КАМПАНИЯ</b><small>Операция ${next+1}/4 · ${op.sector}${caseCleared.every(Boolean)?' · все дела закрыты':''}</small></div></button>
+  <button class="mode-card primary" id="mCampaign"><i>🚀</i><div><b>РОЗЫСК СОЧ · КАМПАНИЯ</b><small>Операция ${next+1}/${CASE_OPERATIONS.length} · ${op.sector}${caseCleared.every(Boolean)?' · все дела закрыты':''}</small></div></button>
   <button class="mode-card" id="mDossier"><i>📁</i><div><b>ДОСЬЕ ОПЕРАЦИЙ</b><small>Выбрать любую открытую операцию</small></div></button>
   <button class="mode-card" id="mEndless"><i>🌀</i><div><b>БЕЗДНА ∞</b><small>Бесконечные волны, перки, боссы · рекорд: волна ${abyssBestWave}</small></div></button>
   <button class="mode-card challenge" id="mChallenge"><i>🏅</i><div><b>ИСПЫТАНИЕ ДНЯ · «${todayChallenge().name}»</b><small>${todayChallenge().desc} · ${challengeDoneToday()?'пройдено ✓':'награда '+CHALLENGE_REWARD+' ₡'}</small></div></button>
